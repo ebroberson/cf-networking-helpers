@@ -28,7 +28,7 @@ type TestDatabase struct {
 func (d *TestDatabase) DBConfig() db.Config {
 	var connectionString string
 	if d.ConnInfo.Type == "mysql" {
-		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
 	} else if d.ConnInfo.Type == "postgres" {
 		connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
