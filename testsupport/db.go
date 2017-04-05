@@ -110,9 +110,12 @@ func GetMySQLDBConnectionInfo() *DBConnectionInfo {
 }
 
 func GetDBConnectionInfo() *DBConnectionInfo {
-	if os.Getenv("MYSQL") == "true" {
+	switch os.Getenv("DB") {
+	case "mysql":
 		return GetMySQLDBConnectionInfo()
-	} else {
+	case "postgres":
 		return GetPostgresDBConnectionInfo()
+	default:
+		panic("unable to determine database to use.  Set environment variable DB")
 	}
 }
