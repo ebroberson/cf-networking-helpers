@@ -2,10 +2,10 @@ package db_test
 
 import (
 	"errors"
-	"lib/fakes"
 	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/fakes"
 
 	"github.com/jmoiron/sqlx"
 

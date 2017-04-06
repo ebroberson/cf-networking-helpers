@@ -14,6 +14,8 @@ import (
 func TestDb(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "DB Suite")
-
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 }
+
+var _ = BeforeSuite(func() {
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+})

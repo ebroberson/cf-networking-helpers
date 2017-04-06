@@ -2,11 +2,11 @@ package db_test
 
 import (
 	"fmt"
+	"math/rand"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
-	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -18,10 +18,7 @@ var _ = Describe("GetConnectionPool", func() {
 	)
 
 	BeforeEach(func() {
-		guid, err := uuid.NewV4()
-		Expect(err).NotTo(HaveOccurred())
-
-		dbName = fmt.Sprintf("test_%x", guid[:])
+		dbName = fmt.Sprintf("test_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 	})
