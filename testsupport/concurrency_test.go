@@ -1,8 +1,9 @@
 package testsupport_test
 
 import (
-	"lib/testsupport"
 	"sync/atomic"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
