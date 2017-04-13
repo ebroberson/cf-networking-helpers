@@ -43,24 +43,22 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
-	certWriter := &testsupport.CertWriter{
-		BinPath:  certstrapBin,
-		CertPath: certDir,
-	}
+	certWriter, err := testsupport.NewCertWriter(certDir)
+	Expect(err).NotTo(HaveOccurred())
 
 	paths.ServerCACertPath, err = certWriter.WriteCA("server-ca")
 	Expect(err).NotTo(HaveOccurred())
-	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSignForServer("server", "server-ca")
+	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSign("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	paths.ClientCACertPath, err = certWriter.WriteCA("client-ca")
 	Expect(err).NotTo(HaveOccurred())
-	paths.ClientCertPath, paths.ClientKeyPath, err = certWriter.WriteAndSignForClient("client", "client-ca")
+	paths.ClientCertPath, paths.ClientKeyPath, err = certWriter.WriteAndSign("client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	paths.WrongClientCACertPath, err = certWriter.WriteCA("wrong-client-ca")
 	Expect(err).NotTo(HaveOccurred())
-	paths.WrongClientCertPath, paths.WrongClientKeyPath, err = certWriter.WriteAndSignForClient("wrong-client", "wrong-client-ca")
+	paths.WrongClientCertPath, paths.WrongClientKeyPath, err = certWriter.WriteAndSign("wrong-client", "wrong-client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	data, err := json.Marshal(paths)
