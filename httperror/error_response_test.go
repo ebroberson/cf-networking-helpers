@@ -77,12 +77,24 @@ var _ = Describe("ErrorResponse", func() {
 
 	Describe("Unauthorized", func() {
 		It("Logs the error", func() {
-			errorResponse.Forbidden(resp, err, "message", "description")
+			errorResponse.Unauthorized(resp, err, "message", "description")
 			Expect(logger).To(gbytes.Say("message: description.*potato"))
 		})
 		It("responds with an error body and status code 401", func() {
 			errorResponse.Unauthorized(resp, err, "message", "description")
 			Expect(resp.Code).To(Equal(http.StatusUnauthorized))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
+		})
+	})
+
+	Describe("Conflict", func() {
+		It("Logs the error", func() {
+			errorResponse.Conflict(resp, err, "message", "description")
+			Expect(logger).To(gbytes.Say("message: description.*potato"))
+		})
+		It("responds with an error body and status code 409", func() {
+			errorResponse.Conflict(resp, err, "message", "description")
+			Expect(resp.Code).To(Equal(http.StatusConflict))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
 		})
 	})

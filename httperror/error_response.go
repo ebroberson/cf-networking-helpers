@@ -43,3 +43,9 @@ func (e *ErrorResponse) Unauthorized(w http.ResponseWriter, err error, message, 
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
 }
+
+func (e *ErrorResponse) Conflict(w http.ResponseWriter, err error, message, description string) {
+	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
+	w.WriteHeader(http.StatusConflict)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+}
