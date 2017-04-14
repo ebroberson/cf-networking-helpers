@@ -47,7 +47,7 @@ type HttpResponseCodeError struct {
 }
 
 func (h *HttpResponseCodeError) Error() string {
-	return h.Message
+	return fmt.Sprintf("http status %d: %s", h.StatusCode, h.Message)
 }
 
 func (c *Client) Do(method, route string, reqData, respData interface{}, token string) error {

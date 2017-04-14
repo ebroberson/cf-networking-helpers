@@ -182,6 +182,7 @@ var _ = Describe("JsonClient", func() {
 
 					Expect(typedErr.StatusCode).To(Equal(400))
 					Expect(typedErr.Message).To(Equal("some-error"))
+					Expect(typedErr.Error()).To(Equal("http status 400: some-error"))
 				})
 			})
 			Context("when the returned body is not valid JSON", func() {
