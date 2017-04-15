@@ -2,11 +2,9 @@ package mutualtls_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"os/exec"
 
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
@@ -38,10 +36,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
 	certDir, err = ioutil.TempDir("", "test-certs")
 	Expect(err).NotTo(HaveOccurred())
-
-	certstrapBin := fmt.Sprintf("/%s/certstrap", certDir)
-	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
-	Expect(cmd.Run()).NotTo(HaveOccurred())
 
 	certWriter, err := testsupport.NewCertWriter(certDir)
 	Expect(err).NotTo(HaveOccurred())
