@@ -48,12 +48,6 @@ function bootMysql {
 go get github.com/onsi/ginkgo
 go install github.com/onsi/ginkgo/ginkgo
 
-# mutualtls test builds the binary
-# TODO(gabe): test should just use certstrap library calls, rather than shelling out to the binary
-# that way it is properly detected by go get -t ./...
-go get github.com/square/certstrap
-
-
 if [ "${1:-""}" = "" ]; then
   extraArgs=""
 else
