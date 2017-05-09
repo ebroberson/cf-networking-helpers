@@ -22,12 +22,14 @@ type FakeMetron interface {
 
 	Address() string
 	Close() error
+	Port() int
 }
 
 type fakeMetron struct {
 	lock           *sync.Mutex
 	receivedEvents []Event
 	listener       net.PacketConn
+	port           int
 }
 
 func NewFakeMetron() *fakeMetron {
@@ -41,6 +43,7 @@ func NewFakeMetron() *fakeMetron {
 	metron := &fakeMetron{
 		lock:     &sync.Mutex{},
 		listener: listener,
+		port:     port,
 	}
 	go metron.listenForEvents()
 	return metron
@@ -48,6 +51,10 @@ func NewFakeMetron() *fakeMetron {
 
 func (f *fakeMetron) Address() string {
 	return f.listener.LocalAddr().String()
+}
+
+func (f *fakeMetron) Port() int {
+	return f.port
 }
 
 func (f *fakeMetron) Close() error {
