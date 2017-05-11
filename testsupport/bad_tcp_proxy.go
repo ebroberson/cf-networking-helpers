@@ -1,7 +1,6 @@
 package testsupport
 
 import (
-	"context"
 	"errors"
 	"io"
 	"log"
@@ -10,18 +9,14 @@ import (
 )
 
 func NewBadTCPProxy(destAddr string) (*BadTCPProxy, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
-
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return nil, err
 	}
 
 	proxy := &BadTCPProxy{
-		context:    ctx,
-		cancelFunc: cancelFunc,
-		listener:   listener,
-		destAddr:   destAddr,
+		listener: listener,
+		destAddr: destAddr,
 	}
 
 	go proxy.run()
@@ -30,20 +25,14 @@ func NewBadTCPProxy(destAddr string) (*BadTCPProxy, error) {
 }
 
 type BadTCPProxy struct {
-	context    context.Context
-	cancelFunc context.CancelFunc
-	listener   net.Listener
-	destAddr   string
+	listener net.Listener
+	destAddr string
 }
 
 func (bp *BadTCPProxy) run() error {
 	defer bp.Close()
 
 	for {
-		if bp.context.Err() != nil {
-			return bp.context.Err()
-		}
-
 		clientConn, err := bp.listener.Accept()
 		if err != nil {
 			return err
@@ -54,14 +43,19 @@ func (bp *BadTCPProxy) run() error {
 }
 
 func (bp *BadTCPProxy) handleClientConn(clientConn net.Conn) {
-	connToDest, err := (&net.Dialer{}).DialContext(bp.context, "tcp", bp.destAddr)
+	connToDest, err := (&net.Dialer{}).Dial("tcp", bp.destAddr)
 	if err != nil {
 		log.Printf("%s", err)
 		return
 	}
 
+	// dest receives request
+	go io.Copy(connToDest, clientConn)
+	// go bp.badCopy(connToDest, clientConn)
+
+	// client receives response
+	// go io.Copy(clientConn, connToDest)
 	go bp.badCopy(clientConn, connToDest)
-	go bp.badCopy(connToDest, clientConn)
 }
 
 func (bp *BadTCPProxy) badCopy(dst io.Writer, src io.Reader) {
@@ -72,8 +66,6 @@ func (bp *BadTCPProxy) badCopy(dst io.Writer, src io.Reader) {
 				select {
 				case <-time.After(time.Hour):
 					return errors.New("potato timeout")
-				case <-bp.context.Done():
-					return bp.context.Err()
 				}
 			}
 			return nil
@@ -84,7 +76,6 @@ func (bp *BadTCPProxy) badCopy(dst io.Writer, src io.Reader) {
 
 func (bp *BadTCPProxy) Close() {
 	bp.listener.Close()
-	bp.cancelFunc()
 }
 
 func (bp *BadTCPProxy) ListenAddress() string {

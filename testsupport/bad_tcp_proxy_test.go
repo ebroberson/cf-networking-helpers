@@ -40,7 +40,7 @@ var _ = Describe("BadTcpProxy", func() {
 		Expect(testHandler.NumRequestsInFlight()).To(Equal(0))
 	})
 
-	It("proxies its inputs to its outputs", func(done Done) {
+	XIt("proxies its inputs to its outputs", func(done Done) {
 		resp, err := http.Post(proxyURL, "text/plain", strings.NewReader("hello world"))
 		Expect(err).NotTo(HaveOccurred())
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -56,10 +56,13 @@ var _ = Describe("BadTcpProxy", func() {
 			requestCompleted := make(chan error)
 			go func() {
 				defer GinkgoRecover()
+				fmt.Println("starting post\n\n")
 				resp, err := http.Post(proxyURL, "text/plain", strings.NewReader("hello! world"))
 				Expect(err).NotTo(HaveOccurred())
+				fmt.Println("done with post, about to ReadAll\n\n")
 				_, err = ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
+				fmt.Println("done with ReadAll\n\n")
 				requestCompleted <- err
 			}()
 			Consistently(requestCompleted, "1s").ShouldNot(Receive())

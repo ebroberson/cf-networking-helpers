@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"sync/atomic"
 )
 
@@ -21,19 +20,20 @@ func (th *TestHandler) NumRequestsInFlight() int {
 
 func (th *TestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	atomic.AddInt64(&th.nRequestsInFlight, 1)
-	fmt.Println("\n\n\nrequests in flight++\n\n\n")
-	os.Stdout.Sync()
+	fmt.Println("handler start")
 
 	defer func() {
 		atomic.AddInt64(&th.nRequestsInFlight, -1)
-		fmt.Println("\n\n\nrequests in flight--\n\n\n")
+		fmt.Println("handler end")
 	}()
 
 	inputBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
-	w.Write(bytes.ToUpper(inputBytes))
+	if _, err := w.Write(bytes.ToUpper(inputBytes)); err != nil {
+		panic(err)
+	}
 }
 
 type SingleByteWriter struct {
