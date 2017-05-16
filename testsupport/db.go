@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 
@@ -13,11 +14,14 @@ import (
 )
 
 type DBConnectionInfo struct {
-	Type     string
-	Hostname string
-	Port     string
-	Username string
-	Password string
+	Type           string
+	Hostname       string
+	Port           string
+	Username       string
+	Password       string
+	ConnectTimeout time.Duration
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
 }
 
 type TestDatabase struct {
@@ -28,8 +32,9 @@ type TestDatabase struct {
 func (d *TestDatabase) DBConfig() db.Config {
 	var connectionString string
 	if d.ConnInfo.Type == "mysql" {
-		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
+		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&timeout=%s&readTimeout=%s&writeTimeout=%s",
+			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name,
+			d.ConnInfo.ConnectTimeout, d.ConnInfo.ReadTimeout, d.ConnInfo.WriteTimeout)
 	} else if d.ConnInfo.Type == "postgres" {
 		connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
@@ -89,23 +94,31 @@ func (c *DBConnectionInfo) execSQL(sqlCommand string) (string, error) {
 	return string(session.Out.Contents()), nil
 }
 
+const DefaultDBTimeout = 1 * time.Second
+
 func GetPostgresDBConnectionInfo() *DBConnectionInfo {
 	return &DBConnectionInfo{
-		Type:     "postgres",
-		Hostname: "127.0.0.1",
-		Port:     "5432",
-		Username: "postgres",
-		Password: "",
+		Type:           "postgres",
+		Hostname:       "127.0.0.1",
+		Port:           "5432",
+		Username:       "postgres",
+		Password:       "",
+		ConnectTimeout: DefaultDBTimeout,
+		ReadTimeout:    DefaultDBTimeout,
+		WriteTimeout:   DefaultDBTimeout,
 	}
 }
 
 func GetMySQLDBConnectionInfo() *DBConnectionInfo {
 	return &DBConnectionInfo{
-		Type:     "mysql",
-		Hostname: "127.0.0.1",
-		Port:     "3306",
-		Username: "root",
-		Password: "password",
+		Type:           "mysql",
+		Hostname:       "127.0.0.1",
+		Port:           "3306",
+		Username:       "root",
+		Password:       "password",
+		ConnectTimeout: DefaultDBTimeout,
+		ReadTimeout:    DefaultDBTimeout,
+		WriteTimeout:   DefaultDBTimeout,
 	}
 }
 
