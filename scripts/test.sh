@@ -54,15 +54,17 @@ else
   extraArgs="${@}"
 fi
 
+go get -t ./...
 
 if [ ${DB:-"none"} = "mysql" ]; then
   bootMysql
+  ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
 elif [ ${DB:-"none"} = "postgres" ]; then
   bootPostgres
+  ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
 else
   echo "skipping database"
   extraArgs="-skipPackage=db ${extraArgs}"
 fi
 
-go get -t ./...
-ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites ${extraArgs}
+ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}
