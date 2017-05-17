@@ -89,6 +89,7 @@ func (d *TestDatabase) DBConfig() db.Config {
 	} else {
 		connectionString = fmt.Sprintf("some unsupported db type connection string: %s\n", d.ConnInfo.Type)
 	}
+
 	return db.Config{
 		Type:             d.ConnInfo.Type,
 		ConnectionString: connectionString,
@@ -151,8 +152,8 @@ func GetPostgresDBConnectionInfo() *DBConnectionInfo {
 		Username:       "postgres",
 		Password:       "",
 		ConnectTimeout: DefaultDBTimeout,
-		// ReadTimeout:    DefaultDBTimeout,
-		// WriteTimeout:   DefaultDBTimeout,
+		ReadTimeout:    DefaultDBTimeout,
+		WriteTimeout:   DefaultDBTimeout,
 	}
 }
 

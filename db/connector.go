@@ -1,12 +1,13 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"net"
 
+	_ "github.com/Kount/pq-timeouts"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 type RetriableError struct {
@@ -19,13 +20,17 @@ func (r RetriableError) Error() string {
 }
 
 func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
-	var dbConn *sqlx.DB
-	var err error
+	driver := dbConfig.Type
+	if driver == "postgres" {
+		driver = "pq-timeouts"
+	}
 
-	dbConn, err = sqlx.Open(dbConfig.Type, dbConfig.ConnectionString)
+	nativeDBConn, err := sql.Open(driver, dbConfig.ConnectionString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database connection: %s", err)
 	}
+
+	dbConn := sqlx.NewDb(nativeDBConn, dbConfig.Type)
 
 	if err = dbConn.Ping(); err != nil {
 		dbConn.Close()
