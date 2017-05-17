@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os/exec"
-	"policy-server/integration/helpers"
 	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
@@ -50,9 +49,7 @@ var _ = Describe("Timeout", func() {
 		Context("when the read timeout is greater than the context timeout and the database is unreachable", func() {
 			BeforeEach(func() {
 				ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
-				// dbConnectionInfo.ConnectTimeout = 3 * time.Second // not needed for QueryRowContext
 				dbConnectionInfo.ReadTimeout = 3 * time.Second
-				// dbConnectionInfo.WriteTimeout = 3 * time.Second // not needed for QueryRowContext
 				testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 				var err error
@@ -98,11 +95,9 @@ var _ = Describe("Timeout", func() {
 			Describe("ExecContext", func() {
 				PIt("returns a context deadline exceeded error", func(done Done) {
 					defer database.Close()
-
-					_, err := database.Exec("INSERT into mytable (id) values (1);")
-					// _, err := database.ExecContext(ctx, "INSERT into mytable (id) values (1);")
-					Expect(err).NotTo(HaveOccurred())
-					// Expect(err).To(BeAssignableToTypeOf(context.DeadlineExceeded))
+					_, err := database.ExecContext(ctx, "INSERT into mytable (id) values (1);")
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(BeAssignableToTypeOf(context.DeadlineExceeded))
 
 					close(done)
 				}, testTimeoutInSeconds)
@@ -116,6 +111,6 @@ func mustSucceed(binary string, args ...string) string {
 	cmd := exec.Command(binary, args...)
 	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(sess, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+	Eventually(sess, "5s").Should(gexec.Exit(0))
 	return string(sess.Out.Contents())
 }
