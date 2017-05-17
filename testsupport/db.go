@@ -2,6 +2,7 @@ package testsupport
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"time"
@@ -29,19 +30,65 @@ type TestDatabase struct {
 	ConnInfo *DBConnectionInfo
 }
 
+func encodeAsQueryString(values map[string]interface{}) string {
+	queryValues := url.Values{}
+	for k, v := range values {
+		queryValues.Add(k, fmt.Sprintf("%v", v))
+	}
+	return queryValues.Encode()
+}
+
+func (d *TestDatabase) mysqlConnectionString() string {
+	queryStringValues := map[string]interface{}{
+		"parseTime": true,
+	}
+	if d.ConnInfo.ConnectTimeout != 0 {
+		queryStringValues["timeout"] = d.ConnInfo.ConnectTimeout
+	}
+	if d.ConnInfo.ReadTimeout != 0 {
+		queryStringValues["readTimeout"] = d.ConnInfo.ReadTimeout
+	}
+	if d.ConnInfo.WriteTimeout != 0 {
+		queryStringValues["writeTimeout"] = d.ConnInfo.WriteTimeout
+	}
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s",
+		d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name,
+		encodeAsQueryString(queryStringValues),
+	)
+}
+
+func (d *TestDatabase) postgresConnectionString() string {
+	asMilliseconds := func(dur time.Duration) int64 {
+		return dur.Nanoseconds() / 1000 / 1000
+	}
+	queryStringValues := map[string]interface{}{
+		"sslmode": "disable",
+	}
+	if d.ConnInfo.ConnectTimeout != 0 {
+		queryStringValues["connect_timeout"] = asMilliseconds(d.ConnInfo.ConnectTimeout)
+	}
+	if d.ConnInfo.ReadTimeout != 0 {
+		queryStringValues["read_timeout"] = asMilliseconds(d.ConnInfo.ReadTimeout)
+	}
+	if d.ConnInfo.WriteTimeout != 0 {
+		queryStringValues["write_timeout"] = asMilliseconds(d.ConnInfo.WriteTimeout)
+	}
+
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s",
+		d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name,
+		encodeAsQueryString(queryStringValues),
+	)
+}
+
 func (d *TestDatabase) DBConfig() db.Config {
 	var connectionString string
 	if d.ConnInfo.Type == "mysql" {
-		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&timeout=%s&readTimeout=%s&writeTimeout=%s",
-			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name,
-			d.ConnInfo.ConnectTimeout, d.ConnInfo.ReadTimeout, d.ConnInfo.WriteTimeout)
+		connectionString = d.mysqlConnectionString()
 	} else if d.ConnInfo.Type == "postgres" {
-		connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
+		connectionString = d.postgresConnectionString()
 	} else {
 		connectionString = fmt.Sprintf("some unsupported db type connection string: %s\n", d.ConnInfo.Type)
 	}
-
 	return db.Config{
 		Type:             d.ConnInfo.Type,
 		ConnectionString: connectionString,
@@ -104,8 +151,8 @@ func GetPostgresDBConnectionInfo() *DBConnectionInfo {
 		Username:       "postgres",
 		Password:       "",
 		ConnectTimeout: DefaultDBTimeout,
-		ReadTimeout:    DefaultDBTimeout,
-		WriteTimeout:   DefaultDBTimeout,
+		// ReadTimeout:    DefaultDBTimeout,
+		// WriteTimeout:   DefaultDBTimeout,
 	}
 }
 
