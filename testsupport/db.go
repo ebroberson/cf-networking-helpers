@@ -142,7 +142,7 @@ func (c *DBConnectionInfo) execSQL(sqlCommand string) (string, error) {
 	return string(session.Out.Contents()), nil
 }
 
-const DefaultDBTimeout = 3 * time.Second
+const DefaultDBTimeout = 5 * time.Second
 
 func GetPostgresDBConnectionInfo() *DBConnectionInfo {
 	return &DBConnectionInfo{
