@@ -29,7 +29,7 @@ function bootMysql {
 	echo -n "booting mysql"
 	(MYSQL_ROOT_PASSWORD=password  /entrypoint.sh mysqld &> /var/log/mysql-boot.log) &
 	trycount=0
-	for i in `seq 1 30`; do
+	for i in `seq 1 60`; do
 		set +e
 		echo '\s;' | mysql -h 127.0.0.1 -u root --password="password" &>/dev/null
 		exitcode=$?
@@ -54,15 +54,17 @@ else
   extraArgs="${@}"
 fi
 
+go get -t ./...
 
 if [ ${DB:-"none"} = "mysql" ]; then
   bootMysql
+  ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
 elif [ ${DB:-"none"} = "postgres" ]; then
   bootPostgres
+  ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
 else
   echo "skipping database"
   extraArgs="-skipPackage=db ${extraArgs}"
 fi
 
-go get -t ./...
-ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites ${extraArgs}
+ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}

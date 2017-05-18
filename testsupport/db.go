@@ -74,6 +74,8 @@ func (d *TestDatabase) postgresConnectionString() string {
 		queryStringValues["write_timeout"] = asMilliseconds(d.ConnInfo.WriteTimeout)
 	}
 
+	// queryStringValues["statement_timeout"] = asMilliseconds(900 * time.Millisecond)
+
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s",
 		d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name,
 		encodeAsQueryString(queryStringValues),
