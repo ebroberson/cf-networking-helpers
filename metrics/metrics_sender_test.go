@@ -81,6 +81,41 @@ var _ = Describe("Metrics Sender", func() {
 		})
 	})
 
+	Describe("SendValue", func() {
+		var (
+			name  string
+			value float64
+			units string
+		)
+		BeforeEach(func() {
+			name = "fakeName"
+			value = float64(4)
+			units = ""
+		})
+		It("Sends value to dropsondemetrics", func() {
+			metricsSender.SendValue(name, value, units)
+			Eventually(fakeDropsonde.GetMessages).Should(HaveLen(1))
+			Eventually(getValueMetrics).Should(ConsistOf(
+				[]*events.ValueMetric{
+					&events.ValueMetric{
+						Name:  proto.String("fakeName"),
+						Unit:  proto.String(""),
+						Value: proto.Float64(4),
+					},
+				},
+			))
+		})
+		Context("when dropsonde returns an error", func() {
+			BeforeEach(func() {
+				fakeDropsonde.ReturnError = errors.New("banana")
+			})
+			It("log the error from dropsonde", func() {
+				metricsSender.SendValue(name, value, units)
+				Expect(logger).To(gbytes.Say("sending-metric.*banana"))
+			})
+		})
+	})
+
 	Describe("IncrementCounter", func() {
 		It("sends a value through dropsonde", func() {
 			metricsSender.IncrementCounter("foo")

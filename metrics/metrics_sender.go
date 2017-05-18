@@ -13,7 +13,11 @@ type MetricsSender struct {
 }
 
 func (ms *MetricsSender) SendDuration(name string, duration time.Duration) {
-	err := dropsondemetrics.SendValue(name, duration.Seconds()*1000, "ms")
+	ms.SendValue(name, duration.Seconds()*1000, "ms")
+}
+
+func (ms *MetricsSender) SendValue(name string, value float64, units string) {
+	err := dropsondemetrics.SendValue(name, value, units)
 	if err != nil {
 		ms.Logger.Error("sending-metric", err)
 	}
