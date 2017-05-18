@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
@@ -21,18 +22,14 @@ var testTimeoutInSeconds = float64(5)
 
 var _ = Describe("Timeout", func() {
 	var (
-		testDatabase     *testsupport.TestDatabase
-		dbConnectionInfo *testsupport.DBConnectionInfo
-		ctx              context.Context
-		database         *sqlx.DB
-		dbName           string
-		dbType           string
+		dbConf   db.Config
+		ctx      context.Context
+		database *sqlx.DB
 	)
-	dbConnectionInfo = testsupport.GetDBConnectionInfo()
-	dbType = dbConnectionInfo.Type
+	dbConf = testsupport.GetDBConfig()
 
 	BeforeEach(func() {
-		dbName = fmt.Sprintf("test_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
 	})
 
 	beginTx := func() error {
@@ -96,34 +93,41 @@ var _ = Describe("Timeout", func() {
 	}
 
 	AfterEach(func() {
-		if testDatabase != nil {
-			testDatabase.Destroy()
-			testDatabase = nil
-		}
+		testsupport.RemoveDatabase(dbConf)
 	})
+
+	blockPort := func(port uint16) {
+		portString := strconv.Itoa(int(port))
+		By("blocking access to port " + portString)
+		mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+	}
+
+	unblockPort := func(port uint16) {
+		portString := strconv.Itoa(int(port))
+		By("unblocking access to port " + portString)
+		mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+	}
 
 	Describe("postgres and mysql", func() {
 		Context("when the read timeout is greater than the context timeout and the database is unreachable", func() {
 			BeforeEach(func() {
 				ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
-				dbConnectionInfo.ReadTimeout = 3 * time.Second
-				testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+				dbConf.Timeout = 3
+				testsupport.CreateDatabase(dbConf)
 
 				var err error
-				database, err = db.GetConnectionPool(testDatabase.DBConfig())
+				database, err = db.GetConnectionPool(dbConf)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("creating a table")
 				_, err = database.Exec(createTable)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("blocking access to port " + dbConnectionInfo.Port)
-				mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
+				blockPort(dbConf.Port)
 			})
 
 			AfterEach(func() {
-				By("allowing access to port " + dbConnectionInfo.Port)
-				mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
+				unblockPort(dbConf.Port)
 			})
 
 			Describe("QueryRowContext", func() {
@@ -135,8 +139,8 @@ var _ = Describe("Timeout", func() {
 			})
 
 			Describe("ExecContext", func() {
-				if dbType != "mysql" {
-					fmt.Printf("skipping mysql tests for db: %s\n", dbType)
+				if dbConf.Type != "mysql" {
+					fmt.Printf("skipping mysql tests for db: %s\n", dbConf.Type)
 					return
 				}
 				expectContextDeadlineExceeded(execContext)
@@ -153,33 +157,29 @@ var _ = Describe("Timeout", func() {
 	})
 
 	Describe("mysql", func() {
-		if dbType != "mysql" {
-			fmt.Printf("skipping mysql tests for db: %s\n", dbType)
+		if dbConf.Type != "mysql" {
+			fmt.Printf("skipping mysql tests for db: %s\n", dbConf.Type)
 			return
 		}
 
 		Context("when the connect and read timeouts are set and the database is unreachable", func() {
 			BeforeEach(func() {
-				dbConnectionInfo.ConnectTimeout = 1 * time.Second
-				dbConnectionInfo.ReadTimeout = 1 * time.Second
-				fmt.Println(dbName)
-				testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+				dbConf.Timeout = 1
+				testsupport.CreateDatabase(dbConf)
 
 				var err error
-				database, err = db.GetConnectionPool(testDatabase.DBConfig())
+				database, err = db.GetConnectionPool(dbConf)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("creating a table")
 				_, err = database.Exec(createTable)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("blocking access to port " + dbConnectionInfo.Port)
-				mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
+				blockPort(dbConf.Port)
 			})
 
 			AfterEach(func() {
-				By("allowing access to port " + dbConnectionInfo.Port)
-				mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
+				unblockPort(dbConf.Port)
 			})
 
 			Context("when the context has no deadline", func() {

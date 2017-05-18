@@ -13,25 +13,21 @@ import (
 
 var _ = Describe("GetConnectionPool", func() {
 	var (
-		testDatabase *testsupport.TestDatabase
-		dbName       string
+		dbConf db.Config
 	)
 
 	BeforeEach(func() {
-		dbName = fmt.Sprintf("test_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
-		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+		dbConf = testsupport.GetDBConfig()
+		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		testsupport.CreateDatabase(dbConf)
 	})
 
 	AfterEach(func() {
-		if testDatabase != nil {
-			testDatabase.Destroy()
-			testDatabase = nil
-		}
+		testsupport.RemoveDatabase(dbConf)
 	})
 
 	It("returns a database reference", func() {
-		database, err := db.GetConnectionPool(testDatabase.DBConfig())
+		database, err := db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
 		defer database.Close()
 
@@ -44,16 +40,13 @@ var _ = Describe("GetConnectionPool", func() {
 			panic("unsupported db type")
 		}
 		Expect(err).NotTo(HaveOccurred())
-		Expect(databaseName).To(Equal(dbName))
+		Expect(databaseName).To(Equal(dbConf.DatabaseName))
 	})
 
 	Context("when the database cannot be accessed", func() {
 		It("returns a non-retryable error", func() {
-			dbConfig := testDatabase.DBConfig()
-			testDatabase.Destroy()
-			testDatabase = nil // so we don't call destroy again in AfterEach
-
-			_, err := db.GetConnectionPool(dbConfig)
+			Expect(testsupport.RemoveDatabase(dbConf)).To(Succeed())
+			_, err := db.GetConnectionPool(dbConf)
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).NotTo(BeAssignableToTypeOf(db.RetriableError{}))
@@ -63,16 +56,9 @@ var _ = Describe("GetConnectionPool", func() {
 
 	Context("when there is a network connectivity problem", func() {
 		It("returns a retriable error", func() {
-			dbConfig := testDatabase.DBConfig()
-			if dbConfig.Type == "mysql" {
-				dbConfig.ConnectionString = fmt.Sprintf("root:password@tcp(127.0.0.1:0)/%s", testDatabase.Name)
-			} else if dbConfig.Type == "postgres" {
-				dbConfig.ConnectionString = fmt.Sprintf("postgres://postgres:@127.0.0.1:0/%s?sslmode=disable", testDatabase.Name)
-			} else {
-				Fail("something is wrong with this test")
-			}
+			dbConf.Port = 0
 
-			_, err := db.GetConnectionPool(dbConfig)
+			_, err := db.GetConnectionPool(dbConf)
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(BeAssignableToTypeOf(db.RetriableError{}))
@@ -81,12 +67,10 @@ var _ = Describe("GetConnectionPool", func() {
 	})
 
 	It("sets the databaseConfig.Type as the DriverName", func() {
-		dbConfig := testDatabase.DBConfig()
-
-		database, err := db.GetConnectionPool(dbConfig)
+		database, err := db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
 		defer database.Close()
 
-		Expect(database.DriverName()).To(Equal(dbConfig.Type))
+		Expect(database.DriverName()).To(Equal(dbConf.Type))
 	})
 })
