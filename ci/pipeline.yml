@@ -13,6 +13,7 @@ jobs:
       trigger: true
   - task: test-postgres
     file: go-db-helpers/ci/test-postgres.yml
+    privileged: true
 
 - name: helpers-test-mysql
   plan:
@@ -21,3 +22,4 @@ jobs:
       trigger: true
   - task: test-mysql
     file: go-db-helpers/ci/test-mysql.yml
+    privileged: true
