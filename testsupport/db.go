@@ -58,10 +58,10 @@ const DefaultDBTimeout = 5
 func getPostgresDBConfig() db.Config {
 	return db.Config{
 		Type:     "postgres",
-		Host:     "127.0.0.1",
-		Port:     5432,
 		User:     "postgres",
 		Password: "",
+		Host:     "127.0.0.1",
+		Port:     5432,
 		Timeout:  DefaultDBTimeout,
 	}
 }
@@ -69,10 +69,10 @@ func getPostgresDBConfig() db.Config {
 func getMySQLDBConfig() db.Config {
 	return db.Config{
 		Type:     "mysql",
-		Host:     "127.0.0.1",
-		Port:     3306,
 		User:     "root",
 		Password: "password",
+		Host:     "127.0.0.1",
+		Port:     3306,
 		Timeout:  DefaultDBTimeout,
 	}
 }

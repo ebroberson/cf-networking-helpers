@@ -8,11 +8,11 @@ import (
 type Config struct {
 	Type         string `json:"type" validate:"nonzero"`
 	User         string `json:"user" validate:"nonzero"`
-	Password     string `json:"password" validate:"nonzero"`
+	Password     string `json:"password"`
 	Host         string `json:"host" validate:"nonzero"`
 	Port         uint16 `json:"port" validate:"nonzero"`
-	DatabaseName string `json:"database_name" validate:"nonzero"`
 	Timeout      int    `json:"timeout" validate:"min=1"`
+	DatabaseName string `json:"database_name" validate:""`
 }
 
 func (c Config) ConnectionString() (string, error) {
