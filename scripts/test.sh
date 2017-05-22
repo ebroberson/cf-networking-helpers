@@ -45,6 +45,7 @@ function bootMysql {
 	exit 1
 }
 
+echo "starting getting ginkgo"
 go get github.com/onsi/ginkgo
 go install github.com/onsi/ginkgo/ginkgo
 
@@ -54,6 +55,7 @@ else
   extraArgs="${@}"
 fi
 
+echo "starting getting dependencies"
 go get -t ./...
 
 if [ ${DB:-"none"} = "mysql" ]; then

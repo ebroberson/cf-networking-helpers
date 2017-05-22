@@ -24,8 +24,11 @@ func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 	if driver == "postgres" {
 		driver = "pq-timeouts"
 	}
-
-	nativeDBConn, err := sql.Open(driver, dbConfig.ConnectionString)
+	connectionString, err := dbConfig.ConnectionString()
+	if err != nil {
+		panic(err)
+	}
+	nativeDBConn, err := sql.Open(driver, connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database connection: %s", err)
 	}

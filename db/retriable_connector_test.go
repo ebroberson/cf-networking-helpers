@@ -45,7 +45,7 @@ var _ = Describe("RetriableConnector", func() {
 				},
 			}
 
-			_, err := retriableConnector.GetConnectionPool(db.Config{ConnectionString: "whatever"})
+			_, err := retriableConnector.GetConnectionPool(db.Config{})
 			Expect(err).To(MatchError("banana"))
 		})
 	})
@@ -54,7 +54,7 @@ var _ = Describe("RetriableConnector", func() {
 		It("retries the connection", func() {
 			retriableConnector.MaxRetries = 5
 
-			_, err := retriableConnector.GetConnectionPool(db.Config{ConnectionString: "whatever"})
+			_, err := retriableConnector.GetConnectionPool(db.Config{})
 
 			Expect(numTries).To(Equal(4))
 			Expect(err).NotTo(HaveOccurred())
@@ -63,7 +63,7 @@ var _ = Describe("RetriableConnector", func() {
 		It("waits between retries", func() {
 			retriableConnector.MaxRetries = 5
 
-			_, err := retriableConnector.GetConnectionPool(db.Config{ConnectionString: "whatever"})
+			_, err := retriableConnector.GetConnectionPool(db.Config{})
 			Expect(err).To(Succeed())
 
 			Expect(sleeper.SleepCallCount()).To(Equal(3))
@@ -80,7 +80,7 @@ var _ = Describe("RetriableConnector", func() {
 					return nil, db.RetriableError{Inner: errors.New("welp")}
 				}
 
-				_, err := retriableConnector.GetConnectionPool(db.Config{ConnectionString: "whatever"})
+				_, err := retriableConnector.GetConnectionPool(db.Config{})
 				Expect(err).To(MatchError(db.RetriableError{Inner: errors.New("welp")}))
 
 				Eventually(numTries).Should(Equal(10))
