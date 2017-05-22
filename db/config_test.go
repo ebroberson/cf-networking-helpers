@@ -39,7 +39,7 @@ var _ = Describe("Config", func() {
 			It("returns the connection string", func() {
 				connectionString, err := config.ConnectionString()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionString).To(Equal("some-user:some-password@tcp(some-host:1234)/some-database?timeout=5&readTimeout=5&writeTimeout=5"))
+				Expect(connectionString).To(Equal("some-user:some-password@tcp(some-host:1234)/some-database?timeout=5s&readTimeout=5s&writeTimeout=5s"))
 			})
 		})
 
