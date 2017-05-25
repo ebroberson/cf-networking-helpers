@@ -149,10 +149,6 @@ var _ = Describe("Timeout", func() {
 			Describe("BeginTx", func() {
 				expectContextDeadlineExceeded(beginTx)
 			})
-
-			Describe("BeginTx", func() {
-				expectContextDeadlineExceeded(beginTx)
-			})
 		})
 	})
 
