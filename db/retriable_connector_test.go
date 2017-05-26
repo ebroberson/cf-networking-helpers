@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/db"
-	"code.cloudfoundry.org/go-db-helpers/fakes"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 
 	"github.com/jmoiron/sqlx"
 

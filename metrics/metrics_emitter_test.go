@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/lager/lagertest"
 
 	"github.com/cloudfoundry/sonde-go/events"

@@ -6,8 +6,8 @@ image_resource:
   source: { repository: c2cnetworking/dev-mysql }
 
 inputs:
-  - name: go-db-helpers
-    path: go/src/code.cloudfoundry.org/go-db-helpers
+  - name: cf-networking-helpers
+    path: go/src/code.cloudfoundry.org/cf-networking-helpers
 
 run:
   path: /bin/bash
@@ -17,4 +17,4 @@ run:
       export GOPATH=${PWD}/go
       export PATH=$PATH:$GOPATH/bin
       export DB=mysql
-      $GOPATH/src/code.cloudfoundry.org/go-db-helpers/scripts/test.sh
+      $GOPATH/src/code.cloudfoundry.org/cf-networking-helpers/scripts/test.sh

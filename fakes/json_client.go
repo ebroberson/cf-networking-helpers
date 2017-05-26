@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/go-db-helpers/json_client"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 )
 
 type JSONClient struct {

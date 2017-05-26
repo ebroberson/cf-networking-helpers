@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"code.cloudfoundry.org/go-db-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"code.cloudfoundry.org/go-db-helpers/fakes"
-	"code.cloudfoundry.org/go-db-helpers/httperror"
+	"code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"

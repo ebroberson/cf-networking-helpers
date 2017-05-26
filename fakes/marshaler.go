@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
 
 type Marshaler struct {

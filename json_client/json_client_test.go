@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"code.cloudfoundry.org/go-db-helpers/fakes"
-	"code.cloudfoundry.org/go-db-helpers/json_client"
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"

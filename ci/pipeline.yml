@@ -1,25 +1,25 @@
 resources:
-- name: go-db-helpers
+- name: cf-networking-helpers
   type: git
   source:
-    uri: https://github.com/cloudfoundry-incubator/go-db-helpers
+    uri: https://github.com/cloudfoundry-incubator/cf-networking-helpers
     branch: master
 
 jobs:
 - name: helpers-test-postgres
   plan:
   - aggregate:
-    - get: go-db-helpers
+    - get: cf-networking-helpers
       trigger: true
   - task: test-postgres
-    file: go-db-helpers/ci/test-postgres.yml
+    file: cf-networking-helpers/ci/test-postgres.yml
     privileged: true
 
 - name: helpers-test-mysql
   plan:
   - aggregate:
-    - get: go-db-helpers
+    - get: cf-networking-helpers
       trigger: true
   - task: test-mysql
-    file: go-db-helpers/ci/test-mysql.yml
+    file: cf-networking-helpers/ci/test-mysql.yml
     privileged: true
