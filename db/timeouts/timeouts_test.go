@@ -108,7 +108,12 @@ var _ = Describe("Timeout", func() {
 		mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
 	}
 
-	Describe("postgres and mysql", func() {
+	Describe("mysql", func() {
+		if dbConf.Type != "mysql" {
+			fmt.Printf("skipping mysql tests for db: %s\n", dbConf.Type)
+			return
+		}
+
 		Context("when the read timeout is greater than the context timeout and the database is unreachable", func() {
 			BeforeEach(func() {
 				ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
@@ -139,10 +144,6 @@ var _ = Describe("Timeout", func() {
 			})
 
 			Describe("ExecContext", func() {
-				if dbConf.Type != "mysql" {
-					fmt.Printf("skipping mysql tests for db: %s\n", dbConf.Type)
-					return
-				}
 				expectContextDeadlineExceeded(execContext)
 			})
 
@@ -150,13 +151,6 @@ var _ = Describe("Timeout", func() {
 				expectContextDeadlineExceeded(beginTx)
 			})
 		})
-	})
-
-	Describe("mysql", func() {
-		if dbConf.Type != "mysql" {
-			fmt.Printf("skipping mysql tests for db: %s\n", dbConf.Type)
-			return
-		}
 
 		Context("when the connect and read timeouts are set and the database is unreachable", func() {
 			BeforeEach(func() {
