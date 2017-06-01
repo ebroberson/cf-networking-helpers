@@ -8,7 +8,7 @@ import (
 
 type LoggableHandlerFunc func(logger lager.Logger, w http.ResponseWriter, r *http.Request)
 
-func LogWrap(logger, accessLogger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
+func LogWrap(logger lager.Logger, loggableHandlerFunc LoggableHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestLogger := logger.Session("request", lager.Data{
 			"method":  r.Method,

@@ -43,7 +43,7 @@ var _ = Describe("LogWrap", func() {
 		}
 	})
 	It("creates \"request\" session and passes it to LoggableHandlerFunc", func() {
-		handler := middleware.LogWrap(logger, nil, loggableHandlerFunc)
+		handler := middleware.LogWrap(logger, loggableHandlerFunc)
 		req, err := http.NewRequest("GET", "http://example.com", nil)
 		Expect(err).NotTo(HaveOccurred())
 		handler.ServeHTTP(nil, req)
