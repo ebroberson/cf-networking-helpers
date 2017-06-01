@@ -47,7 +47,7 @@ var _ = Describe("ErrorResponse", func() {
 		It("increments the counter", func() {
 			errorResponse.InternalServerError(resp, err, "message", "description")
 			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("message"))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
 		})
 	})
 
@@ -61,6 +61,11 @@ var _ = Describe("ErrorResponse", func() {
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
 		})
+		It("increments the counter", func() {
+			errorResponse.BadRequest(resp, err, "message", "description")
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
+		})
 	})
 
 	Describe("Forbidden", func() {
@@ -72,6 +77,11 @@ var _ = Describe("ErrorResponse", func() {
 			errorResponse.Forbidden(resp, err, "message", "description")
 			Expect(resp.Code).To(Equal(http.StatusForbidden))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
+		})
+		It("increments the counter", func() {
+			errorResponse.Forbidden(resp, err, "message", "description")
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
 		})
 	})
 
@@ -85,6 +95,11 @@ var _ = Describe("ErrorResponse", func() {
 			Expect(resp.Code).To(Equal(http.StatusUnauthorized))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
 		})
+		It("increments the counter", func() {
+			errorResponse.Unauthorized(resp, err, "message", "description")
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
+		})
 	})
 
 	Describe("Conflict", func() {
@@ -96,6 +111,11 @@ var _ = Describe("ErrorResponse", func() {
 			errorResponse.Conflict(resp, err, "message", "description")
 			Expect(resp.Code).To(Equal(http.StatusConflict))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
+		})
+		It("increments the counter", func() {
+			errorResponse.Conflict(resp, err, "message", "description")
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
 		})
 	})
 })
