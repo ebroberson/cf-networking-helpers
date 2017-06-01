@@ -1,12 +1,12 @@
-package handlers_test
+package middleware_test
 
 import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
 
-	"code.cloudfoundry.org/cf-networking-helpers/handlers"
-	"code.cloudfoundry.org/cf-networking-helpers/handlers/fakes"
+	"code.cloudfoundry.org/cf-networking-helpers/middleware"
+	"code.cloudfoundry.org/cf-networking-helpers/middleware/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,13 +18,13 @@ var _ = Describe("MetricsWrapper", func() {
 		resp              *httptest.ResponseRecorder
 		innerHandler      *fakes.HTTPHandler
 		outerHandler      http.Handler
-		metricWrapper     *handlers.MetricWrapper
+		metricWrapper     *middleware.MetricWrapper
 		fakeMetricsSender *fakes.MetricsSender
 	)
 	Describe("Wrap", func() {
 		BeforeEach(func() {
 			fakeMetricsSender = &fakes.MetricsSender{}
-			metricWrapper = &handlers.MetricWrapper{
+			metricWrapper = &middleware.MetricWrapper{
 				Name:          "name",
 				MetricsSender: fakeMetricsSender,
 			}
