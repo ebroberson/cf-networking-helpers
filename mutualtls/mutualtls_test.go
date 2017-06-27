@@ -5,11 +5,12 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,8 @@ var _ = Describe("TLS config for internal API server", func() {
 
 	BeforeEach(func() {
 		var err error
-		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
+		port := testsupport.PickAPort()
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", port)
 		clientTLSConfig, err = mutualtls.NewClientTLSConfig(paths.ClientCertPath, paths.ClientKeyPath, paths.ServerCACertPath)
 		Expect(err).NotTo(HaveOccurred())
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertPath, paths.ServerKeyPath, paths.ClientCACertPath)
@@ -48,7 +50,7 @@ var _ = Describe("TLS config for internal API server", func() {
 		group := grouper.NewOrdered(os.Interrupt, members)
 		monitor := ifrit.Invoke(sigmon.New(group))
 
-		Eventually(monitor.Ready(), "10s").Should(BeClosed())
+		Expect(testsupport.WaitOrReady(10*time.Second, monitor)).To(Succeed())
 		return monitor
 	}
 
