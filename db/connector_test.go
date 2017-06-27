@@ -45,7 +45,7 @@ var _ = Describe("GetConnectionPool", func() {
 
 	Context("when the database cannot be accessed", func() {
 		It("returns a non-retryable error", func() {
-			Expect(testsupport.RemoveDatabase(dbConf)).To(Succeed())
+			testsupport.RemoveDatabase(dbConf)
 			_, err := db.GetConnectionPool(dbConf)
 			Expect(err).To(HaveOccurred())
 
