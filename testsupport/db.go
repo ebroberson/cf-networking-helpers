@@ -18,9 +18,8 @@ func CreateDatabase(config db.Config) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func RemoveDatabase(config db.Config) error {
-	_, err := execSQL(config, fmt.Sprintf("DROP DATABASE %s", config.DatabaseName))
-	return err
+func RemoveDatabase(config db.Config) {
+	execSQL(config, fmt.Sprintf("DROP DATABASE %s", config.DatabaseName))
 }
 
 func execSQL(c db.Config, sqlCommand string) (string, error) {
