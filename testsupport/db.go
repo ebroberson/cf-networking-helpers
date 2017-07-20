@@ -80,6 +80,8 @@ func GetDBConfig() db.Config {
 	switch os.Getenv("DB") {
 	case "mysql":
 		return getMySQLDBConfig()
+	case "mysql-5.6":
+		return getMySQLDBConfig()
 	case "postgres":
 		return getPostgresDBConfig()
 	default:
