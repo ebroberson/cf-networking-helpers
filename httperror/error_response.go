@@ -28,6 +28,13 @@ func (e *ErrorResponse) InternalServerError(w http.ResponseWriter, err error, me
 	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
 }
 
+func (e *ErrorResponse) NotAcceptable(w http.ResponseWriter, err error, message, description string) {
+	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
+	w.WriteHeader(http.StatusNotAcceptable)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+}
+
 func (e *ErrorResponse) BadRequest(w http.ResponseWriter, err error, message, description string) {
 	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
 	w.WriteHeader(http.StatusBadRequest)
