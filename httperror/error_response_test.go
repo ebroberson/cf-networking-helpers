@@ -118,4 +118,21 @@ var _ = Describe("ErrorResponse", func() {
 			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
 		})
 	})
+
+	Describe("NotAcceptable", func() {
+		BeforeEach(func() {
+			errorResponse.NotAcceptable(resp, err, "message", "description")
+		})
+		It("Logs the error", func() {
+			Expect(logger).To(gbytes.Say("message: description.*potato"))
+		})
+		It("responds with an error body and status code 406", func() {
+			Expect(resp.Code).To(Equal(http.StatusNotAcceptable))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
+		})
+		It("increments the counter", func() {
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
+		})
+	})
 })
