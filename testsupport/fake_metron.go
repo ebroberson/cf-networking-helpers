@@ -1,11 +1,9 @@
-package metrics
+package testsupport
 
 import (
 	"fmt"
 	"net"
 	"sync"
-
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gogo/protobuf/proto"
@@ -34,7 +32,7 @@ type fakeMetron struct {
 }
 
 func NewFakeMetron() *fakeMetron {
-	port := testsupport.PickAPort()
+	port := PickAPort()
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	listener, err := net.ListenPacket("udp4", addr)
 	if err != nil {
