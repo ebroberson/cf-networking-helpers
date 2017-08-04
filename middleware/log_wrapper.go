@@ -11,9 +11,9 @@ type Key string
 
 const LoggerKey = Key("logger")
 
-func LogWrap(logger lager.Logger, wrappedHandler http.HandlerFunc) http.HandlerFunc {
+func LogWrap(logger lager.Logger, wrappedHandler http.Handler) http.Handler {
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestLogger := logger.Session("request", lager.Data{
 			"method":  r.Method,
 			"request": r.URL.String(),
@@ -24,6 +24,6 @@ func LogWrap(logger lager.Logger, wrappedHandler http.HandlerFunc) http.HandlerF
 		requestLogger.Debug("serving")
 		defer requestLogger.Debug("done")
 
-		wrappedHandler(w, r)
-	}
+		wrappedHandler.ServeHTTP(w, r)
+	})
 }
