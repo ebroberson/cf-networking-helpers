@@ -23,6 +23,7 @@ var _ = Describe("GetConnectionPool", func() {
 	})
 
 	AfterEach(func() {
+		dbConf = testsupport.GetDBConfig()
 		testsupport.RemoveDatabase(dbConf)
 	})
 

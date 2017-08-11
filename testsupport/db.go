@@ -3,54 +3,65 @@ package testsupport
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
+	"time"
+	"log"
+	"github.com/jmoiron/sqlx"
+	"github.com/onsi/ginkgo"
 )
 
 func CreateDatabase(config db.Config) {
-	_, err := execSQL(config, fmt.Sprintf("CREATE DATABASE %s", config.DatabaseName))
+	dbToCreate := config.DatabaseName
+	config.DatabaseName = ""
+	connection := getDbConnection(config)
+	defer connection.ConnectionPool.Close()
+	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("CREATE DATABASE %s", dbToCreate))
 	Expect(err).NotTo(HaveOccurred())
 }
 
 func RemoveDatabase(config db.Config) {
-	execSQL(config, fmt.Sprintf("DROP DATABASE %s", config.DatabaseName))
+	dbToDrop := config.DatabaseName
+	config.DatabaseName = ""
+	connection := getDbConnection(config)
+	defer connection.ConnectionPool.Close()
+	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
+	if err != nil {
+		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
+	}
 }
 
-func execSQL(c db.Config, sqlCommand string) (string, error) {
-	var cmd *exec.Cmd
+type dbConnection struct {
+	ConnectionPool *sqlx.DB
+	Err            error
+}
 
-	if c.Type == "mysql" {
-		cmd = exec.Command("mysql",
-			"-h", c.Host,
-			"-P", strconv.Itoa(int(c.Port)),
-			"-u", c.User,
-			"-e", sqlCommand)
-		cmd.Env = append(os.Environ(), "MYSQL_PWD="+c.Password)
-	} else if c.Type == "postgres" {
-		cmd = exec.Command("psql",
-			"-h", c.Host,
-			"-p", strconv.Itoa(int(c.Port)),
-			"-U", c.User,
-			"-c", sqlCommand)
-		cmd.Env = append(os.Environ(), "PGPASSWORD="+c.Password)
-	} else {
-		panic("unsupported database type: " + c.Type)
+func getDbConnection(conf db.Config) dbConnection {
+	retriableConnector := db.RetriableConnector{
+		Connector:     db.GetConnectionPool,
+		Sleeper:       db.SleeperFunc(time.Sleep),
+		RetryInterval: 3 * time.Second,
+		MaxRetries:    10,
 	}
 
-	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-	Expect(err).NotTo(HaveOccurred())
-	Eventually(session, "9s").Should(gexec.Exit())
-	if session.ExitCode() != 0 {
-		return "", fmt.Errorf("unexpected exit code: %d", session.ExitCode())
+	channel := make(chan dbConnection)
+	go func() {
+		connection, err := retriableConnector.GetConnectionPool(conf)
+		channel <- dbConnection{connection, err}
+	}()
+	var connectionResult dbConnection
+	select {
+	case connectionResult = <-channel:
+	case <-time.After(5 * time.Second):
+		log.Fatalf("%s.testsupport: db connection timeout", "db-helper")
 	}
-	return string(session.Out.Contents()), nil
+	if connectionResult.Err != nil {
+		log.Fatalf("%s.testsupport: db connect: %s", "db-helper", connectionResult.Err)
+	}
+	return connectionResult
 }
 
 const DefaultDBTimeout = 5
