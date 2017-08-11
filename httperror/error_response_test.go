@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 )
@@ -27,112 +28,43 @@ var _ = Describe("ErrorResponse", func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeMetricsSender = &fakes.MetricsSender{}
 		errorResponse = &httperror.ErrorResponse{
-			Logger:        logger,
 			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 		err = errors.New("potato")
 	})
 
-	Describe("Internal Server Error", func() {
-		It("Logs the error", func() {
-			errorResponse.InternalServerError(resp, err, "message", "description")
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 500", func() {
-			errorResponse.InternalServerError(resp, err, "message", "description")
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			errorResponse.InternalServerError(resp, err, "message", "description")
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
+	DescribeTable("when ErrorResponse is called for a given error type",
+		func(errorCall string, expectedStatusCode int) {
+			switch errorCall {
+			case "InternalServerError":
+				errorResponse.InternalServerError(logger, resp, err, "description")
+			case "BadRequest":
+				errorResponse.BadRequest(logger, resp, err, "description")
+			case "Forbidden":
+				errorResponse.Forbidden(logger, resp, err, "description")
+			case "Unauthorized":
+				errorResponse.Unauthorized(logger, resp, err, "description")
+			case "Conflict":
+				errorResponse.Conflict(logger, resp, err, "description")
+			case "NotAcceptable":
+				errorResponse.NotAcceptable(logger, resp, err, "description")
+			default:
+				Fail("wrote bad tests")
+			}
 
-	Describe("Bad Request", func() {
-		It("Logs the error", func() {
-			errorResponse.BadRequest(resp, err, "message", "description")
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 400", func() {
-			errorResponse.BadRequest(resp, err, "message", "description")
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			errorResponse.BadRequest(resp, err, "message", "description")
+			Expect(logger).To(gbytes.Say("test.*description.*potato"))
+			Expect(resp.Code).To(Equal(expectedStatusCode))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "description"}`))
 			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
 			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
+		},
 
-	Describe("Forbidden", func() {
-		It("Logs the error", func() {
-			errorResponse.Forbidden(resp, err, "message", "description")
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 403", func() {
-			errorResponse.Forbidden(resp, err, "message", "description")
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			errorResponse.Forbidden(resp, err, "message", "description")
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
-
-	Describe("Unauthorized", func() {
-		It("Logs the error", func() {
-			errorResponse.Unauthorized(resp, err, "message", "description")
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 401", func() {
-			errorResponse.Unauthorized(resp, err, "message", "description")
-			Expect(resp.Code).To(Equal(http.StatusUnauthorized))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			errorResponse.Unauthorized(resp, err, "message", "description")
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
-
-	Describe("Conflict", func() {
-		It("Logs the error", func() {
-			errorResponse.Conflict(resp, err, "message", "description")
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 409", func() {
-			errorResponse.Conflict(resp, err, "message", "description")
-			Expect(resp.Code).To(Equal(http.StatusConflict))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			errorResponse.Conflict(resp, err, "message", "description")
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
-
-	Describe("NotAcceptable", func() {
-		BeforeEach(func() {
-			errorResponse.NotAcceptable(resp, err, "message", "description")
-		})
-		It("Logs the error", func() {
-			Expect(logger).To(gbytes.Say("message: description.*potato"))
-		})
-		It("responds with an error body and status code 406", func() {
-			Expect(resp.Code).To(Equal(http.StatusNotAcceptable))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "message: description"}`))
-		})
-		It("increments the counter", func() {
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
-		})
-	})
+		Entry("internal server error", "InternalServerError", http.StatusInternalServerError),
+		Entry("bad request", "BadRequest", http.StatusBadRequest),
+		Entry("forbidden", "Forbidden", http.StatusForbidden),
+		Entry("unauthorized", "Unauthorized", http.StatusUnauthorized),
+		Entry("conflict", "Conflict", http.StatusConflict),
+		Entry("not acceptable", "NotAcceptable", http.StatusNotAcceptable),
+	)
 })

@@ -17,48 +17,36 @@ type metricsSender interface {
 }
 
 type ErrorResponse struct {
-	Logger        lager.Logger
 	MetricsSender metricsSender
 }
 
-func (e *ErrorResponse) InternalServerError(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
-	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+func (e *ErrorResponse) InternalServerError(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusInternalServerError, logger, w, err, description)
 }
 
-func (e *ErrorResponse) BadRequest(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
-	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+func (e *ErrorResponse) BadRequest(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusBadRequest, logger, w, err, description)
 }
 
-func (e *ErrorResponse) Forbidden(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusForbidden)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
-	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+func (e *ErrorResponse) Forbidden(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusForbidden, logger, w, err, description)
 }
 
-func (e *ErrorResponse) Unauthorized(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
-	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+func (e *ErrorResponse) Unauthorized(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusUnauthorized, logger, w, err, description)
 }
 
-func (e *ErrorResponse) Conflict(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusConflict)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
-	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
+func (e *ErrorResponse) Conflict(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusConflict, logger, w, err, description)
 }
 
-func (e *ErrorResponse) NotAcceptable(w http.ResponseWriter, err error, message, description string) {
-	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
-	w.WriteHeader(http.StatusNotAcceptable)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+func (e *ErrorResponse) NotAcceptable(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusNotAcceptable, logger, w, err, description)
+}
+
+func (e *ErrorResponse) respondWithCode(statusCode int, logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	logger.Error(fmt.Sprintf("%s", description), err)
+	w.WriteHeader(statusCode)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, description)))
 	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
 }
