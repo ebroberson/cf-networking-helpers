@@ -12,11 +12,14 @@ import (
 	"log"
 	"github.com/jmoiron/sqlx"
 	"github.com/onsi/ginkgo"
+	"runtime/debug"
 )
 
 func CreateDatabase(config db.Config) {
+	config.Timeout = 120
 	dbToCreate := config.DatabaseName
 	config.DatabaseName = ""
+	println(time.Now().String() + " Creating database " + dbToCreate)
 	connection := getDbConnection(config)
 	defer connection.ConnectionPool.Close()
 	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("CREATE DATABASE %s", dbToCreate))
@@ -24,13 +27,20 @@ func CreateDatabase(config db.Config) {
 }
 
 func RemoveDatabase(config db.Config) {
+	config.Timeout = 120
+
 	dbToDrop := config.DatabaseName
 	config.DatabaseName = ""
+
+	i := time.Now().String() + "<<>>"
+	println(i + " Dropping database " + dbToDrop)
+	debug.PrintStack()
+
 	connection := getDbConnection(config)
 	defer connection.ConnectionPool.Close()
 	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
 	if err != nil {
-		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
+		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%s %+v", i, err))
 	}
 }
 
@@ -42,9 +52,9 @@ type dbConnection struct {
 func getDbConnection(conf db.Config) dbConnection {
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
-		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
-		MaxRetries:    10,
+		Sleeper:       nil,
+		RetryInterval: 0 * time.Second,
+		MaxRetries:    0,
 	}
 
 	channel := make(chan dbConnection)

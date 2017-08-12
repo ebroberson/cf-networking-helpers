@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"fmt"
 )
 
 //go:generate counterfeiter -o ../fakes/sleeper.go --fake-name Sleeper . sleeper
@@ -35,6 +36,7 @@ func (r *RetriableConnector) GetConnectionPool(dbConfig Config) (*sqlx.DB, error
 		}
 
 		if _, ok := err.(RetriableError); ok && attempts < r.MaxRetries {
+			println(fmt.Sprintf("retrying due to getting an error %#+v", err))
 			r.Sleeper.Sleep(r.RetryInterval)
 			continue
 		}
