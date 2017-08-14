@@ -7,12 +7,12 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 
-	. "github.com/onsi/gomega"
-	"time"
 	"log"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/onsi/ginkgo"
-	"runtime/debug"
+	. "github.com/onsi/gomega"
 )
 
 func CreateDatabase(config db.Config) {
@@ -32,15 +32,11 @@ func RemoveDatabase(config db.Config) {
 	dbToDrop := config.DatabaseName
 	config.DatabaseName = ""
 
-	i := time.Now().String() + "<<>>"
-	println(i + " Dropping database " + dbToDrop)
-	debug.PrintStack()
-
 	connection := getDbConnection(config)
 	defer connection.ConnectionPool.Close()
 	_, err := connection.ConnectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
 	if err != nil {
-		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%s %+v", i, err))
+		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
 	}
 }
 
