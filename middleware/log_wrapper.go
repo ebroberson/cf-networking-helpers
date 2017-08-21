@@ -21,6 +21,20 @@ type LogWrapper struct {
 
 const LoggerKey = Key("logger")
 
+func (l *LogWrapper) getUUID(r *http.Request) string {
+	previousUUID := r.Header.Get("X-VCAP-Request-ID")
+
+	generatedUUID, err := l.UUIDGenerator.GenerateUUID()
+	if err == nil {
+		if previousUUID != "" {
+			return fmt.Sprintf("%s::%s", previousUUID, generatedUUID)
+		} else {
+			return generatedUUID
+		}
+	}
+	return ""
+}
+
 func (l *LogWrapper) LogWrap(logger lager.Logger, wrappedHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var requestLogger lager.Logger
@@ -31,10 +45,10 @@ func (l *LogWrapper) LogWrap(logger lager.Logger, wrappedHandler http.Handler) h
 			"request": r.URL.String(),
 		}
 
-		uuid, err := l.UUIDGenerator.GenerateUUID()
-		if err == nil {
-			sessionName = fmt.Sprintf("%s_%s", sessionName, uuid)
+		uuid := l.getUUID(r)
+		if uuid != "" {
 			data["request_guid"] = uuid
+			sessionName = fmt.Sprintf("%s_%s", sessionName, uuid)
 		}
 
 		requestLogger = logger.Session(sessionName, data)
@@ -44,6 +58,8 @@ func (l *LogWrapper) LogWrap(logger lager.Logger, wrappedHandler http.Handler) h
 
 		requestLogger.Debug("serving")
 		defer requestLogger.Debug("done")
+
+		w.Header().Add("X-VCAP-Request-ID", uuid)
 
 		wrappedHandler.ServeHTTP(w, r)
 	})

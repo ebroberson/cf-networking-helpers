@@ -3,6 +3,7 @@ package middleware_test
 import (
 	"errors"
 	"net/http"
+	"net/http/httptest"
 
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware/fakes"
@@ -35,7 +36,9 @@ var _ = Describe("LogWrap", func() {
 		logWrapper        *middleware.LogWrapper
 		logger            *lagertest.TestLogger
 		loggableHandler   http.Handler
+		wrappingHandler   http.Handler
 		fakeUUIDGenerator *fakes.UUIDGenerator
+		resp              *httptest.ResponseRecorder
 	)
 
 	BeforeEach(func() {
@@ -55,13 +58,17 @@ var _ = Describe("LogWrap", func() {
 		logWrapper = &middleware.LogWrapper{
 			UUIDGenerator: fakeUUIDGenerator,
 		}
+
+		wrappingHandler = logWrapper.LogWrap(logger, loggableHandler)
+		resp = httptest.NewRecorder()
 	})
 
 	It("creates \"request-<UUID>\" session and passes it to loggableHandler", func() {
-		handler := logWrapper.LogWrap(logger, loggableHandler)
 		req, err := http.NewRequest("GET", "http://example.com", nil)
 		Expect(err).NotTo(HaveOccurred())
-		handler.ServeHTTP(nil, req)
+		wrappingHandler.ServeHTTP(resp, req)
+
+		Expect(resp.Header().Get("X-VCAP-Request-ID")).To(Equal("some-uuid"))
 
 		Expect(logger.Logs()).To(HaveLen(3))
 		Expect(logger.Logs()[0]).To(SatisfyAll(
@@ -98,16 +105,60 @@ var _ = Describe("LogWrap", func() {
 		))
 	})
 
+	Context("when uuid is provided on request header", func() {
+		It("appends to the uuid on the request header", func() {
+			req, err := http.NewRequest("GET", "http://example.com", nil)
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Add("X-VCAP-Request-ID", `previous-uuid`)
+
+			wrappingHandler.ServeHTTP(resp, req)
+
+			Expect(resp.Header().Get("X-VCAP-Request-ID")).To(Equal("previous-uuid::some-uuid"))
+
+			Expect(logger.Logs()).To(HaveLen(3))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.DEBUG, "test-session.request_previous-uuid::some-uuid.serving"),
+				HaveLogData(SatisfyAll(
+					HaveLen(4),
+					HaveKeyWithValue("session", Equal("1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+					HaveKeyWithValue("request_guid", Equal("previous-uuid::some-uuid")),
+				)),
+			))
+
+			Expect(logger.Logs()[1]).To(SatisfyAll(
+				LogsWith(lager.INFO, "test-session.request_previous-uuid::some-uuid.logger-group.written-in-loggable-handler"),
+				HaveLogData(SatisfyAll(
+					HaveLen(4),
+					HaveKeyWithValue("session", Equal("1.1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+					HaveKeyWithValue("request_guid", Equal("previous-uuid::some-uuid")),
+				)),
+			))
+
+			Expect(logger.Logs()[2]).To(SatisfyAll(
+				LogsWith(lager.DEBUG, "test-session.request_previous-uuid::some-uuid.done"),
+				HaveLogData(SatisfyAll(
+					HaveLen(4),
+					HaveKeyWithValue("session", Equal("1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+					HaveKeyWithValue("request_guid", Equal("previous-uuid::some-uuid")),
+				)),
+			))
+		})
+	})
+
 	Context("when creating the uuid fails", func() {
 		BeforeEach(func() {
 			fakeUUIDGenerator.GenerateUUIDReturns("", errors.New("ignored"))
 		})
 		It("ignores the error, creates \"request\" session and passes it to loggableHandler", func() {
-
-			handler := logWrapper.LogWrap(logger, loggableHandler)
 			req, err := http.NewRequest("GET", "http://example.com", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(nil, req)
+			wrappingHandler.ServeHTTP(resp, req)
 
 			Expect(logger.Logs()).To(HaveLen(3))
 			Expect(logger.Logs()[0]).To(SatisfyAll(
@@ -139,7 +190,6 @@ var _ = Describe("LogWrap", func() {
 					HaveKeyWithValue("request", Equal("http://example.com")),
 				)),
 			))
-
 		})
 	})
 })
