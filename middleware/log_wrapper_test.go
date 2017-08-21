@@ -1,9 +1,11 @@
 package middleware_test
 
 import (
+	"errors"
 	"net/http"
 
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
+	"code.cloudfoundry.org/cf-networking-helpers/middleware/fakes"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 
@@ -28,10 +30,12 @@ var HaveLogData = func(nextMatcher types.GomegaMatcher) types.GomegaMatcher {
 		return log.Data
 	}, nextMatcher)
 }
-var _ = Describe("LogConWrap", func() {
+var _ = Describe("LogWrap", func() {
 	var (
-		logger          *lagertest.TestLogger
-		loggableHandler http.Handler
+		logWrapper        *middleware.LogWrapper
+		logger            *lagertest.TestLogger
+		loggableHandler   http.Handler
+		fakeUUIDGenerator *fakes.UUIDGenerator
 	)
 
 	BeforeEach(func() {
@@ -45,36 +49,97 @@ var _ = Describe("LogConWrap", func() {
 				}
 			}
 		})
+
+		fakeUUIDGenerator = &fakes.UUIDGenerator{}
+		fakeUUIDGenerator.GenerateUUIDReturns("some-uuid", nil)
+		logWrapper = &middleware.LogWrapper{
+			UUIDGenerator: fakeUUIDGenerator,
+		}
 	})
 
-	It("creates \"request\" session and passes it to loggableHandler", func() {
-		handler := middleware.LogWrap(logger, loggableHandler)
+	It("creates \"request-<UUID>\" session and passes it to loggableHandler", func() {
+		handler := logWrapper.LogWrap(logger, loggableHandler)
 		req, err := http.NewRequest("GET", "http://example.com", nil)
 		Expect(err).NotTo(HaveOccurred())
 		handler.ServeHTTP(nil, req)
 
 		Expect(logger.Logs()).To(HaveLen(3))
 		Expect(logger.Logs()[0]).To(SatisfyAll(
-			LogsWith(lager.DEBUG, "test-session.request.serving"),
+			LogsWith(lager.DEBUG, "test-session.request_some-uuid.serving"),
 			HaveLogData(SatisfyAll(
+				HaveLen(4),
 				HaveKeyWithValue("session", Equal("1")),
 				HaveKeyWithValue("method", Equal("GET")),
 				HaveKeyWithValue("request", Equal("http://example.com")),
+				HaveKeyWithValue("request_guid", Equal("some-uuid")),
 			)),
 		))
 
 		Expect(logger.Logs()[1]).To(SatisfyAll(
-			LogsWith(lager.INFO, "test-session.request.logger-group.written-in-loggable-handler"),
-			HaveLogData(HaveKeyWithValue("session", Equal("1.1"))),
+			LogsWith(lager.INFO, "test-session.request_some-uuid.logger-group.written-in-loggable-handler"),
+			HaveLogData(SatisfyAll(
+				HaveLen(4),
+				HaveKeyWithValue("session", Equal("1.1")),
+				HaveKeyWithValue("method", Equal("GET")),
+				HaveKeyWithValue("request", Equal("http://example.com")),
+				HaveKeyWithValue("request_guid", Equal("some-uuid")),
+			)),
 		))
 
 		Expect(logger.Logs()[2]).To(SatisfyAll(
-			LogsWith(lager.DEBUG, "test-session.request.done"),
+			LogsWith(lager.DEBUG, "test-session.request_some-uuid.done"),
 			HaveLogData(SatisfyAll(
+				HaveLen(4),
 				HaveKeyWithValue("session", Equal("1")),
 				HaveKeyWithValue("method", Equal("GET")),
 				HaveKeyWithValue("request", Equal("http://example.com")),
+				HaveKeyWithValue("request_guid", Equal("some-uuid")),
 			)),
 		))
+	})
+
+	Context("when creating the uuid fails", func() {
+		BeforeEach(func() {
+			fakeUUIDGenerator.GenerateUUIDReturns("", errors.New("ignored"))
+		})
+		It("ignores the error, creates \"request\" session and passes it to loggableHandler", func() {
+
+			handler := logWrapper.LogWrap(logger, loggableHandler)
+			req, err := http.NewRequest("GET", "http://example.com", nil)
+			Expect(err).NotTo(HaveOccurred())
+			handler.ServeHTTP(nil, req)
+
+			Expect(logger.Logs()).To(HaveLen(3))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.DEBUG, "test-session.request.serving"),
+				HaveLogData(SatisfyAll(
+					HaveLen(3),
+					HaveKeyWithValue("session", Equal("1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+				)),
+			))
+
+			Expect(logger.Logs()[1]).To(SatisfyAll(
+				LogsWith(lager.INFO, "test-session.request.logger-group.written-in-loggable-handler"),
+				HaveLogData(SatisfyAll(
+					HaveLen(3),
+					HaveKeyWithValue("session", Equal("1.1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+				)),
+			))
+
+			Expect(logger.Logs()[2]).To(SatisfyAll(
+				LogsWith(lager.DEBUG, "test-session.request.done"),
+				HaveLogData(SatisfyAll(
+					HaveLen(3),
+					HaveKeyWithValue("session", Equal("1")),
+					HaveKeyWithValue("method", Equal("GET")),
+					HaveKeyWithValue("request", Equal("http://example.com")),
+				)),
+			))
+
+		})
 	})
 })
