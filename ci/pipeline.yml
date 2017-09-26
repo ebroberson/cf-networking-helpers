@@ -2,7 +2,7 @@ resources:
 - name: cf-networking-helpers
   type: git
   source:
-    uri: https://github.com/cloudfoundry-incubator/cf-networking-helpers
+    uri: https://github.com/cloudfoundry/cf-networking-helpers
     branch: master
 
 jobs:
