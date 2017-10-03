@@ -7,6 +7,7 @@ import (
 
 	"github.com/square/certstrap/depot"
 	"github.com/square/certstrap/pkix"
+	"time"
 )
 
 type CertWriter struct {
@@ -42,7 +43,8 @@ func (c *CertWriter) WriteCA(caName string) (string, error) {
 		return "", fmt.Errorf("create rsa key: %s", err)
 	}
 
-	crt, err := pkix.CreateCertificateAuthority(key, "", 5, "", "", "", "", caName)
+	expiry := time.Now().AddDate(5, 0, 0).UTC()
+	crt, err := pkix.CreateCertificateAuthority(key, "", expiry, "", "", "", "", caName)
 	if err != nil {
 		return "", fmt.Errorf("create certificate authority: %s", err)
 	}
@@ -89,7 +91,8 @@ func (c *CertWriter) WriteAndSign(commonName, caName string) (string, string, er
 		return "", "", fmt.Errorf("get CA key: %s", err)
 	}
 
-	crtOut, err := pkix.CreateCertificateHost(crt, caKey, csr, 1)
+	expiry := time.Now().AddDate(1, 0, 0).UTC()
+	crtOut, err := pkix.CreateCertificateHost(crt, caKey, csr, expiry)
 	if err != nil {
 		return "", "", fmt.Errorf("create certificate host: %s", err)
 	}
