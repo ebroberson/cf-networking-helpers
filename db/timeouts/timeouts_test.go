@@ -39,7 +39,7 @@ var _ = Describe("Timeout", func() {
 
 	queryRowContext := func() error {
 		var databaseName string
-		return database.QueryRowContext(ctx, "SELECT current_database();").Scan(&databaseName)
+		return database.QueryRowContext(ctx, "SELECT database();").Scan(&databaseName)
 	}
 
 	queryContext := func() error {
@@ -59,7 +59,7 @@ var _ = Describe("Timeout", func() {
 
 	queryRow := func() error {
 		var databaseName string
-		return database.QueryRow("SELECT current_database();").Scan(&databaseName)
+		return database.QueryRow("SELECT database();").Scan(&databaseName)
 	}
 
 	query := func() error {
@@ -82,12 +82,12 @@ var _ = Describe("Timeout", func() {
 		}, testTimeoutInSeconds)
 	}
 
-	expectTCPIOTimeout := func(dbFunc func() error) {
+	expectInvalidConnection := func(dbFunc func() error) {
 		It("returns a tcp i/o timeout error", func(done Done) {
 			defer database.Close()
 			err := dbFunc()
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError("dial tcp 127.0.0.1:3306: i/o timeout"))
+			Expect(err).To(MatchError("invalid connection"))
 			close(done)
 		}, testTimeoutInSeconds)
 	}
@@ -177,19 +177,19 @@ var _ = Describe("Timeout", func() {
 					ctx = context.Background()
 				})
 				Describe("QueryRowContext", func() {
-					expectTCPIOTimeout(queryRowContext)
+					expectInvalidConnection(queryRowContext)
 				})
 
 				Describe("QueryContext", func() {
-					expectTCPIOTimeout(queryContext)
+					expectInvalidConnection(queryContext)
 				})
 
 				Describe("ExecContext", func() {
-					expectTCPIOTimeout(execContext)
+					expectInvalidConnection(execContext)
 				})
 
 				Describe("BeginTx", func() {
-					expectTCPIOTimeout(beginTx)
+					expectInvalidConnection(beginTx)
 				})
 			})
 
@@ -216,19 +216,19 @@ var _ = Describe("Timeout", func() {
 
 			Context("when the non-context methods are used", func() {
 				Describe("QueryRow", func() {
-					expectTCPIOTimeout(queryRow)
+					expectInvalidConnection(queryRow)
 				})
 
 				Describe("Query", func() {
-					expectTCPIOTimeout(query)
+					expectInvalidConnection(query)
 				})
 
 				Describe("Exec", func() {
-					expectTCPIOTimeout(exec)
+					expectInvalidConnection(exec)
 				})
 
 				Describe("Begin", func() {
-					expectTCPIOTimeout(begin)
+					expectInvalidConnection(begin)
 				})
 			})
 		})
