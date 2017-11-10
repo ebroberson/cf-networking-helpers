@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 
@@ -78,10 +79,11 @@ func getMySQLDBConfig() db.Config {
 }
 
 func GetDBConfig() db.Config {
-	switch os.Getenv("DB") {
-	case "mysql":
+	dbEnv := os.Getenv("DB")
+	switch {
+	case strings.HasPrefix(dbEnv, "mysql"):
 		return getMySQLDBConfig()
-	case "postgres":
+	case strings.HasPrefix(dbEnv, "postgres"):
 		return getPostgresDBConfig()
 	default:
 		panic("unable to determine database to use.  Set environment variable DB")
