@@ -43,7 +43,7 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 	}()
 
-	close(ready)
+	go func() { close(ready) }()
 
 	for {
 		select {
