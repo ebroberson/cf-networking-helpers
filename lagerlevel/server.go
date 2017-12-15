@@ -58,7 +58,7 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 		if time.Now().After(timeOut) {
 			httpServer.Close()
-			return errors.New("failed to start https")
+			return errors.New("failed to successfully connect to http server")
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
