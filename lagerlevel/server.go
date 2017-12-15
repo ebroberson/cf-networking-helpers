@@ -3,9 +3,11 @@ package lagerlevel
 import (
 	"code.cloudfoundry.org/lager"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Server struct {
@@ -28,8 +30,9 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/log-level", s.handleRequest)
 
+	address := fmt.Sprintf("%s:%d", s.address, s.port)
 	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", s.address, s.port),
+		Addr:    address,
 		Handler: mux,
 	}
 	httpServer.SetKeepAlivesEnabled(false)
@@ -43,7 +46,26 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		}
 	}()
 
-	go func() { close(ready) }()
+	timeOut := time.Now().Add(5 * time.Second)
+
+	url := fmt.Sprintf("http://%s", address)
+	client := &http.Client{}
+
+	for {
+		resp, err := client.Get(url)
+		if err == nil && resp.StatusCode == 404 {
+			break
+		}
+		if time.Now().After(timeOut) {
+			httpServer.Close()
+			return errors.New("failed to start https")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	s.logger.Info("server-started")
+
+	close(ready)
 
 	for {
 		select {
