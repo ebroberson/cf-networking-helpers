@@ -23,7 +23,7 @@ func (r RetriableError) Error() string {
 func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 	connectionString, err := dbConfig.ConnectionString()
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create connection string: %s", err)
 	}
 	nativeDBConn, err := sql.Open(dbConfig.Type, connectionString)
 	if err != nil {

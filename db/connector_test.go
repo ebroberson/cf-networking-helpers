@@ -27,6 +27,11 @@ var _ = Describe("GetConnectionPool", func() {
 		testsupport.RemoveDatabase(dbConf)
 	})
 
+	It("returns an error if the connection string cannot be created", func() {
+		_, err := db.GetConnectionPool(db.Config{})
+		Expect(err).To(MatchError("failed to create connection string: timeout must be at least 1 second: 0"))
+	})
+
 	It("returns a database reference", func() {
 		database, err := db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
