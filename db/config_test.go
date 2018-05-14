@@ -87,6 +87,10 @@ var _ = Describe("Config", func() {
 					config.RequireSSL = true
 				})
 
+				AfterEach(func() {
+					mysql.DeregisterTLSConfig("some-database-tls")
+				})
+
 				Context("success", func() {
 					BeforeEach(func() {
 						caCertFile, err := ioutil.TempFile("", "")
