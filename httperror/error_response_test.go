@@ -67,4 +67,25 @@ var _ = Describe("ErrorResponse", func() {
 		Entry("conflict", "Conflict", http.StatusConflict),
 		Entry("not acceptable", "NotAcceptable", http.StatusNotAcceptable),
 	)
+
+	Context("when a metadata error is supplied", func() {
+		It("returns the metadata inside the response", func() {
+			metadata := map[string]interface{}{
+				"some-metadata": "foo",
+			}
+
+			errorResponse.BadRequest(logger, resp, httperror.NewMetadataError(errors.New("potato"), metadata), "description")
+
+			Expect(logger).To(gbytes.Say("test.*description.*potato"))
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{
+				"error": "description",
+				"metadata": {
+					"some-metadata": "foo"
+				}
+			}`))
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
+		})
+	})
 })

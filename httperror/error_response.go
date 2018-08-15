@@ -1,6 +1,7 @@
 package httperror
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -18,6 +19,26 @@ type metricsSender interface {
 
 type ErrorResponse struct {
 	MetricsSender metricsSender
+}
+
+type MetadataError struct {
+	metadata      map[string]interface{}
+	internalError error
+}
+
+func NewMetadataError(internalError error, metadata map[string]interface{}) MetadataError {
+	return MetadataError{
+		internalError: internalError,
+		metadata:      metadata,
+	}
+}
+
+func (m MetadataError) Error() string {
+	return m.internalError.Error()
+}
+
+func (m MetadataError) Metadata() map[string]interface{} {
+	return m.metadata
 }
 
 func (e *ErrorResponse) InternalServerError(logger lager.Logger, w http.ResponseWriter, err error, description string) {
@@ -47,6 +68,11 @@ func (e *ErrorResponse) NotAcceptable(logger lager.Logger, w http.ResponseWriter
 func (e *ErrorResponse) respondWithCode(statusCode int, logger lager.Logger, w http.ResponseWriter, err error, description string) {
 	logger.Error(fmt.Sprintf("%s", description), err)
 	w.WriteHeader(statusCode)
-	w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, description)))
+	if metadataError, ok := err.(MetadataError); ok {
+		j, _ := json.Marshal(metadataError.Metadata())
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s", "metadata": %s}`, description, j)))
+	} else {
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, description)))
+	}
 	e.MetricsSender.IncrementCounter(HTTP_ERROR_METRIC_NAME)
 }
