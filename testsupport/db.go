@@ -1,11 +1,13 @@
 package testsupport
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/lager/lagertest"
 
 	"log"
 	"time"
@@ -46,6 +48,7 @@ type dbConnection struct {
 
 func getDbConnection(conf db.Config) dbConnection {
 	retriableConnector := db.RetriableConnector{
+		Logger:        lagertest.NewTestLogger("test"),
 		Connector:     db.GetConnectionPool,
 		Sleeper:       nil,
 		RetryInterval: 0 * time.Second,
@@ -54,7 +57,7 @@ func getDbConnection(conf db.Config) dbConnection {
 
 	channel := make(chan dbConnection)
 	go func() {
-		connection, err := retriableConnector.GetConnectionPool(conf)
+		connection, err := retriableConnector.GetConnectionPool(conf, context.Background())
 		channel <- dbConnection{connection, err}
 	}()
 	var connectionResult dbConnection

@@ -1,8 +1,10 @@
 package db_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -28,12 +30,18 @@ var _ = Describe("GetConnectionPool", func() {
 	})
 
 	It("returns an error if the connection string cannot be created", func() {
-		_, err := db.GetConnectionPool(db.Config{})
+		_, err := db.GetConnectionPool(db.Config{}, context.Background())
 		Expect(err).To(MatchError("failed to create connection string: timeout must be at least 1 second: 0"))
 	})
 
+	It("times out when the context hits the deadline", func() {
+		zeroTimeoutCtx, _ := context.WithTimeout(context.Background(), 0*time.Second)
+		_, err := db.GetConnectionPool(dbConf, zeroTimeoutCtx)
+		Expect(err).To(MatchError("unable to ping: context deadline exceeded"))
+	})
+
 	It("returns a database reference", func() {
-		database, err := db.GetConnectionPool(dbConf)
+		database, err := db.GetConnectionPool(dbConf, context.Background())
 		Expect(err).NotTo(HaveOccurred())
 		defer database.Close()
 
@@ -52,7 +60,7 @@ var _ = Describe("GetConnectionPool", func() {
 	Context("when the database cannot be accessed", func() {
 		It("returns a non-retryable error", func() {
 			testsupport.RemoveDatabase(dbConf)
-			_, err := db.GetConnectionPool(dbConf)
+			_, err := db.GetConnectionPool(dbConf, context.Background())
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).NotTo(BeAssignableToTypeOf(db.RetriableError{}))
@@ -64,7 +72,7 @@ var _ = Describe("GetConnectionPool", func() {
 		It("returns a retriable error", func() {
 			dbConf.Port = 0
 
-			_, err := db.GetConnectionPool(dbConf)
+			_, err := db.GetConnectionPool(dbConf, context.Background())
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(BeAssignableToTypeOf(db.RetriableError{}))
@@ -73,7 +81,7 @@ var _ = Describe("GetConnectionPool", func() {
 	})
 
 	It("sets the databaseConfig.Type as the DriverName", func() {
-		database, err := db.GetConnectionPool(dbConf)
+		database, err := db.GetConnectionPool(dbConf, context.Background())
 		Expect(err).NotTo(HaveOccurred())
 		defer database.Close()
 

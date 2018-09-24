@@ -120,7 +120,7 @@ var _ = Describe("Timeout", func() {
 				testsupport.CreateDatabase(dbConf)
 
 				var err error
-				database, err = db.GetConnectionPool(dbConf)
+				database, err = db.GetConnectionPool(dbConf, context.Background())
 				Expect(err).NotTo(HaveOccurred())
 
 				By("creating a table")
@@ -157,7 +157,7 @@ var _ = Describe("Timeout", func() {
 				testsupport.CreateDatabase(dbConf)
 
 				var err error
-				database, err = db.GetConnectionPool(dbConf)
+				database, err = db.GetConnectionPool(dbConf, context.Background())
 				Expect(err).NotTo(HaveOccurred())
 
 				By("creating a table")

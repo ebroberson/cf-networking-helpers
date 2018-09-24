@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net"
@@ -20,7 +21,7 @@ func (r RetriableError) Error() string {
 	return fmt.Sprintf("%s: %s", r.Msg, r.Inner.Error())
 }
 
-func GetConnectionPool(dbConfig Config) (*ConnWrapper, error) {
+func GetConnectionPool(dbConfig Config, ctx context.Context) (*ConnWrapper, error) {
 	connectionString, err := dbConfig.ConnectionString()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection string: %s", err)
@@ -32,7 +33,7 @@ func GetConnectionPool(dbConfig Config) (*ConnWrapper, error) {
 
 	dbConn := sqlx.NewDb(nativeDBConn, dbConfig.Type)
 
-	if err = dbConn.Ping(); err != nil {
+	if err = dbConn.PingContext(ctx); err != nil {
 		dbConn.Close()
 		if netErr, ok := err.(*net.OpError); ok {
 			return nil, RetriableError{

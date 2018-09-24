@@ -1,9 +1,10 @@
 package db
 
 import (
+	"context"
 	"time"
 
-	"fmt"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/sleeper.go --fake-name Sleeper . sleeper
@@ -18,24 +19,27 @@ func (sf SleeperFunc) Sleep(duration time.Duration) {
 }
 
 type RetriableConnector struct {
-	Connector     func(Config) (*ConnWrapper, error)
+	Logger        lager.Logger
+	Connector     func(Config, context.Context) (*ConnWrapper, error)
 	Sleeper       sleeper
 	RetryInterval time.Duration
 	MaxRetries    int
 }
 
-func (r *RetriableConnector) GetConnectionPool(dbConfig Config) (*ConnWrapper, error) {
+func (r *RetriableConnector) GetConnectionPool(dbConfig Config, ctx context.Context) (*ConnWrapper, error) {
 	var attempts int
 	for {
 		attempts++
 
-		db, err := r.Connector(dbConfig)
+		db, err := r.Connector(dbConfig, ctx)
 		if err == nil {
 			return db, nil
 		}
 
 		if _, ok := err.(RetriableError); ok && attempts < r.MaxRetries {
-			println(fmt.Sprintf("retrying due to getting an error %#+v", err))
+			r.Logger.Info("retrying due to getting an error", lager.Data{
+				"error": err,
+			})
 			r.Sleeper.Sleep(r.RetryInterval)
 			continue
 		}
