@@ -11,7 +11,6 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
-	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -24,7 +23,7 @@ var _ = Describe("Timeout", func() {
 	var (
 		dbConf   db.Config
 		ctx      context.Context
-		database *sqlx.DB
+		database *db.ConnWrapper
 	)
 	dbConf = testsupport.GetDBConfig()
 
