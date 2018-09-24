@@ -52,7 +52,7 @@ func (h *HttpResponseCodeError) Error() string {
 
 func (c *Client) Do(method, route string, reqData, respData interface{}, token string) error {
 	var reader io.Reader
-	if method != "GET" {
+	if method != "GET" && reqData != nil {
 		bodyBytes, err := c.Marshaler.Marshal(reqData)
 		if err != nil {
 			return fmt.Errorf("json marshal request body: %s", err)

@@ -95,6 +95,22 @@ var _ = Describe("JsonClient", func() {
 			Expect(logger).To(gbytes.Say(`http-do.*some-key.*some-value`))
 		})
 
+		It("does not include a request body if it's nil, as some methods have optional req body", func() {
+			method = "DELETE"
+			err := jsonClient.Do(method, route, nil, &respData, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(httpClient.DoCallCount()).To(Equal(1))
+			receivedRequest := httpClient.DoArgsForCall(0)
+			Expect(receivedRequest.Method).To(Equal("DELETE"))
+			Expect(receivedRequest.URL.Host).To(Equal("some.url"))
+			Expect(receivedRequest.URL.Path).To(Equal("/some/route"))
+			Expect(receivedRequest.Body).To(BeNil())
+
+			Expect(respData).To(Equal(map[string]string{"some-key": "some-value"}))
+			Expect(logger).To(gbytes.Say(`http-do.*some-key.*some-value`))
+		})
+
 		It("sets the authorization header with the token", func() {
 			err := jsonClient.Do(method, route, reqData, &respData, token)
 			Expect(err).NotTo(HaveOccurred())
