@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -41,7 +40,7 @@ func RemoveDatabase(config db.Config) {
 }
 
 type dbConnection struct {
-	ConnectionPool *sqlx.DB
+	ConnectionPool *db.ConnWrapper
 	Err            error
 }
 

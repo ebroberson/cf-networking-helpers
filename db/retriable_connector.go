@@ -3,7 +3,6 @@ package db
 import (
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"fmt"
 )
 
@@ -19,13 +18,13 @@ func (sf SleeperFunc) Sleep(duration time.Duration) {
 }
 
 type RetriableConnector struct {
-	Connector     func(Config) (*sqlx.DB, error)
+	Connector     func(Config) (*ConnWrapper, error)
 	Sleeper       sleeper
 	RetryInterval time.Duration
 	MaxRetries    int
 }
 
-func (r *RetriableConnector) GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
+func (r *RetriableConnector) GetConnectionPool(dbConfig Config) (*ConnWrapper, error) {
 	var attempts int
 	for {
 		attempts++

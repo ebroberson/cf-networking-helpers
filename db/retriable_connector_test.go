@@ -7,8 +7,6 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 
-	"github.com/jmoiron/sqlx"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -27,7 +25,7 @@ var _ = Describe("RetriableConnector", func() {
 		retriableConnector = &db.RetriableConnector{
 			Sleeper:       sleeper,
 			RetryInterval: time.Minute,
-			Connector: func(db.Config) (*sqlx.DB, error) {
+			Connector: func(db.Config) (*db.ConnWrapper, error) {
 				numTries++
 				if numTries > 3 {
 					return nil, nil
@@ -40,7 +38,7 @@ var _ = Describe("RetriableConnector", func() {
 	Context("when the inner Connector returns a non-retriable error", func() {
 		It("returns the error immediately", func() {
 			retriableConnector := db.RetriableConnector{
-				Connector: func(db.Config) (*sqlx.DB, error) {
+				Connector: func(db.Config) (*db.ConnWrapper, error) {
 					return nil, errors.New("banana")
 				},
 			}
@@ -75,7 +73,7 @@ var _ = Describe("RetriableConnector", func() {
 		Context("when max retries have occurred", func() {
 			It("stops retrying and returns the last error", func() {
 				retriableConnector.MaxRetries = 10
-				retriableConnector.Connector = func(db.Config) (*sqlx.DB, error) {
+				retriableConnector.Connector = func(db.Config) (*db.ConnWrapper, error) {
 					numTries++
 					return nil, db.RetriableError{Inner: errors.New("welp")}
 				}

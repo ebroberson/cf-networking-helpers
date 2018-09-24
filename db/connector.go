@@ -20,7 +20,7 @@ func (r RetriableError) Error() string {
 	return fmt.Sprintf("%s: %s", r.Msg, r.Inner.Error())
 }
 
-func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
+func GetConnectionPool(dbConfig Config) (*ConnWrapper, error) {
 	connectionString, err := dbConfig.ConnectionString()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection string: %s", err)
@@ -43,5 +43,5 @@ func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 		return nil, fmt.Errorf("unable to ping: %s", err)
 	}
 
-	return dbConn, nil
+	return &ConnWrapper{DB: dbConn}, nil
 }
