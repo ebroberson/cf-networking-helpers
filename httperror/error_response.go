@@ -57,6 +57,10 @@ func (e *ErrorResponse) Unauthorized(logger lager.Logger, w http.ResponseWriter,
 	e.respondWithCode(http.StatusUnauthorized, logger, w, err, description)
 }
 
+func (e *ErrorResponse) NotFound(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	e.respondWithCode(http.StatusNotFound, logger, w, err, description)
+}
+
 func (e *ErrorResponse) Conflict(logger lager.Logger, w http.ResponseWriter, err error, description string) {
 	e.respondWithCode(http.StatusConflict, logger, w, err, description)
 }

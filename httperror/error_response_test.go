@@ -45,6 +45,8 @@ var _ = Describe("ErrorResponse", func() {
 				errorResponse.Forbidden(logger, resp, err, "description")
 			case "Unauthorized":
 				errorResponse.Unauthorized(logger, resp, err, "description")
+			case "NotFound":
+				errorResponse.NotFound(logger, resp, err, "description")
 			case "Conflict":
 				errorResponse.Conflict(logger, resp, err, "description")
 			case "NotAcceptable":
@@ -63,6 +65,7 @@ var _ = Describe("ErrorResponse", func() {
 		Entry("internal server error", "InternalServerError", http.StatusInternalServerError),
 		Entry("bad request", "BadRequest", http.StatusBadRequest),
 		Entry("forbidden", "Forbidden", http.StatusForbidden),
+		Entry("not found", "NotFound", http.StatusNotFound),
 		Entry("unauthorized", "Unauthorized", http.StatusUnauthorized),
 		Entry("conflict", "Conflict", http.StatusConflict),
 		Entry("not acceptable", "NotAcceptable", http.StatusNotAcceptable),
