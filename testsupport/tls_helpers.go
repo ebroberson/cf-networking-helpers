@@ -3,6 +3,7 @@ package testsupport
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 
 	"github.com/square/certstrap/depot"
@@ -69,7 +70,7 @@ func (c *CertWriter) WriteAndSign(commonName, caName string) (string, string, er
 
 	csr, err := pkix.CreateCertificateSigningRequest(
 		key, "", []net.IP{net.ParseIP("127.0.0.1")},
-		[]string{commonName}, "", "", "", "", commonName,
+		[]string{commonName}, []*url.URL{},"", "", "", "", commonName,
 	)
 	if err != nil {
 		return "", "", fmt.Errorf("create certificate request: %s", err)
