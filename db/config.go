@@ -16,8 +16,6 @@ type Config struct {
 	RequireSSL             bool   `json:"require_ssl" validate:""`
 	CACert                 string `json:"ca_cert" validate:""`
 	SkipHostnameValidation bool   `json:"skip_hostname_validation" validate:""`
-	ClientCert             string `json:"client_cert" validate:""`
-	ClientKey              string `json:"client_key" validate:""`
 }
 
 func (c Config) ConnectionString() (string, error) {

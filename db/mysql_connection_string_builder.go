@@ -59,14 +59,6 @@ func (m *MySQLConnectionStringBuilder) Build(config Config) (string, error) {
 			}
 		}
 
-		if config.ClientCert != "" && config.ClientKey != "" {
-			clientCert, err := tls.LoadX509KeyPair(config.ClientCert, config.ClientKey)
-			if err != nil {
-				return "", fmt.Errorf("loading key pair: %s", err)
-			}
-
-			tlsConfig.Certificates = []tls.Certificate{clientCert}
-		}
 		err = m.MySQLAdapter.RegisterTLSConfig(dbConfig.TLSConfig, tlsConfig)
 		if err != nil {
 			return "", fmt.Errorf("registering mysql tls config: %s", err)
