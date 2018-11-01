@@ -55,9 +55,6 @@ else
   extraArgs="${@}"
 fi
 
-echo "starting getting dependencies"
-go get -t ./...
-
 if [ ${DB:-"none"} = "mysql" ] || [ ${DB:-"none"} = "mysql-5.6" ]; then
   bootMysql
   ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
