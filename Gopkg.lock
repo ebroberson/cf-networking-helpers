@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:12a3cc0561c5b3faaa4b706437b9dc36bf02adb4f7da02197b0cbdbeb176ec6b"
+  name = "code.cloudfoundry.org/bbs"
+  packages = ["db/sqldb/helpers/monitor"]
+  pruneopts = "UT"
+  revision = "fa22f11221f96f71ebb08f05b415a48f2f473d27"
+
+[[projects]]
   digest = "1:20e04f7898c08824b69760e314c3ff9b64e65fd78889ad64a8ef1dcbc94bcaf4"
   name = "code.cloudfoundry.org/lager"
   packages = [
@@ -274,6 +282,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor",
     "code.cloudfoundry.org/lager",
     "code.cloudfoundry.org/lager/lagertest",
     "github.com/cloudfoundry/dropsonde/emitter/fake",

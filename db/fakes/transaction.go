@@ -24,17 +24,17 @@ type Transaction struct {
 		result1 sql.Result
 		result2 error
 	}
-	QueryRowStub        func(query string, args ...interface{}) *sql.Row
+	QueryRowStub        func(query string, args ...interface{}) db.RowScanner
 	queryRowMutex       sync.RWMutex
 	queryRowArgsForCall []struct {
 		query string
 		args  []interface{}
 	}
 	queryRowReturns struct {
-		result1 *sql.Row
+		result1 db.RowScanner
 	}
 	queryRowReturnsOnCall map[int]struct {
-		result1 *sql.Row
+		result1 db.RowScanner
 	}
 	QueryxStub        func(query string, args ...interface{}) (*sqlx.Rows, error)
 	queryxMutex       sync.RWMutex
@@ -144,7 +144,7 @@ func (fake *Transaction) ExecReturnsOnCall(i int, result1 sql.Result, result2 er
 	}{result1, result2}
 }
 
-func (fake *Transaction) QueryRow(query string, args ...interface{}) *sql.Row {
+func (fake *Transaction) QueryRow(query string, args ...interface{}) db.RowScanner {
 	fake.queryRowMutex.Lock()
 	ret, specificReturn := fake.queryRowReturnsOnCall[len(fake.queryRowArgsForCall)]
 	fake.queryRowArgsForCall = append(fake.queryRowArgsForCall, struct {
@@ -174,22 +174,22 @@ func (fake *Transaction) QueryRowArgsForCall(i int) (string, []interface{}) {
 	return fake.queryRowArgsForCall[i].query, fake.queryRowArgsForCall[i].args
 }
 
-func (fake *Transaction) QueryRowReturns(result1 *sql.Row) {
+func (fake *Transaction) QueryRowReturns(result1 db.RowScanner) {
 	fake.QueryRowStub = nil
 	fake.queryRowReturns = struct {
-		result1 *sql.Row
+		result1 db.RowScanner
 	}{result1}
 }
 
-func (fake *Transaction) QueryRowReturnsOnCall(i int, result1 *sql.Row) {
+func (fake *Transaction) QueryRowReturnsOnCall(i int, result1 db.RowScanner) {
 	fake.QueryRowStub = nil
 	if fake.queryRowReturnsOnCall == nil {
 		fake.queryRowReturnsOnCall = make(map[int]struct {
-			result1 *sql.Row
+			result1 db.RowScanner
 		})
 	}
 	fake.queryRowReturnsOnCall[i] = struct {
-		result1 *sql.Row
+		result1 db.RowScanner
 	}{result1}
 }
 

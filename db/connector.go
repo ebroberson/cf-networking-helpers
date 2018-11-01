@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -44,5 +45,8 @@ func GetConnectionPool(dbConfig Config, ctx context.Context) (*ConnWrapper, erro
 		return nil, fmt.Errorf("unable to ping: %s", err)
 	}
 
-	return &ConnWrapper{DB: dbConn}, nil
+	return &ConnWrapper{
+		DB:      dbConn,
+		Monitor: monitor.New(),
+	}, nil
 }

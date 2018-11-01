@@ -1,28 +1,29 @@
 package db
 
 import (
-	"database/sql"
-
+	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"github.com/jmoiron/sqlx"
 )
 
 type ConnWrapper struct {
 	*sqlx.DB
-}
-
-//go:generate counterfeiter -o fakes/transaction.go --fake-name Transaction . Transaction
-type Transaction interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
-	Commit() error
-	Rollback() error
-	Rebind(string) string
-	DriverName() string
+	Monitor monitor.Monitor
 }
 
 func (c *ConnWrapper) Beginx() (Transaction, error) {
-	return c.DB.Beginx()
+	var innerTx *sqlx.Tx
+	err := c.Monitor.Monitor(func() error {
+		var err error
+		innerTx, err = c.DB.Beginx()
+		return err
+	})
+
+	tx := &monitoredTx{
+		tx:      innerTx,
+		monitor: c.Monitor,
+	}
+
+	return tx, err
 }
 
 func (c *ConnWrapper) OpenConnections() int {
