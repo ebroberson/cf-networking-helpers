@@ -1,6 +1,8 @@
 package db
 
 import (
+	"database/sql"
+
 	"code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor"
 	"github.com/jmoiron/sqlx"
 )
@@ -24,6 +26,25 @@ func (c *ConnWrapper) Beginx() (Transaction, error) {
 	}
 
 	return tx, err
+}
+
+func (c *ConnWrapper) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	var result *sql.Rows
+	err := c.Monitor.Monitor(func() error {
+		var err error
+		result, err = c.DB.Query(query, args...)
+		return err
+	})
+	return result, err
+}
+
+func (c *ConnWrapper) QueryRow(query string, args ...interface{}) *sql.Row {
+	var result *sql.Row
+	c.Monitor.Monitor(func() error {
+		result = c.DB.QueryRow(query, args...)
+		return nil
+	})
+	return result
 }
 
 func (c *ConnWrapper) OpenConnections() int {
