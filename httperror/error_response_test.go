@@ -91,4 +91,12 @@ var _ = Describe("ErrorResponse", func() {
 			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("http_error"))
 		})
 	})
+
+	Context("when unauthorized", func() {
+		It("returns www-authenticate in header in compliance with RFC 6750", func() {
+			errorResponse.Unauthorized(logger, resp, err, "description")
+
+			Expect(resp.Header().Get("www-authenticate")).To(Equal("Bearer"))
+		})
+	})
 })

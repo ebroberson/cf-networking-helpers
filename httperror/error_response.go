@@ -54,6 +54,7 @@ func (e *ErrorResponse) Forbidden(logger lager.Logger, w http.ResponseWriter, er
 }
 
 func (e *ErrorResponse) Unauthorized(logger lager.Logger, w http.ResponseWriter, err error, description string) {
+	w.Header().Add("WWW-Authenticate", "Bearer")
 	e.respondWithCode(http.StatusUnauthorized, logger, w, err, description)
 }
 
