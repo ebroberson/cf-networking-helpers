@@ -33,8 +33,12 @@ type fakeMetron struct {
 	port           int
 }
 
-func NewFakeMetron() *fakeMetron {
-	port := ports.PickAPort()
+func NewFakeMetron(params ...int) *fakeMetron {
+	portOffset := 0
+	if len(params) > 0 {
+		portOffset = params[0]
+	}
+	port := ports.PickAPort() + portOffset
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	listener, err := net.ListenPacket("udp4", addr)
 	if err != nil {
