@@ -5,6 +5,8 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 
+	"net/url"
+
 	"github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -68,6 +70,57 @@ var _ = Describe("Config", func() {
 				connectionString, err := config.ConnectionString()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(connectionString).To(Equal("postgres://some-user:some-password@some-host:1234/some-database?connect_timeout=5000&sslmode=disable"))
+			})
+
+			Context("when ssl is required", func() {
+				BeforeEach(func() {
+					config.RequireSSL = true
+					config.CACert = "/tmp/cert"
+				})
+
+				Context("when skip_hostname_validation is set", func() {
+					BeforeEach(func() {
+						config.SkipHostnameValidation = true
+					})
+					It("sets sslmode to \"require\"", func() {
+						connectionString, err := config.ConnectionString()
+						Expect(err).NotTo(HaveOccurred())
+						connUrl, err := url.Parse(connectionString)
+						Expect(err).NotTo(HaveOccurred())
+						connQuery := connUrl.Query()
+						Expect(connQuery.Get("sslmode")).To(Equal("require"))
+					})
+				})
+
+				Context("when skip_hostname_validation is not set", func() {
+					Context("when ca_cert is empty", func() {
+						BeforeEach(func() {
+							config.CACert = ""
+						})
+						It("returns an error", func() {
+							_, err := config.ConnectionString()
+							Expect(err).To(HaveOccurred())
+						})
+					})
+
+					It("sets sslmode to \"verify-full\"", func() {
+						connectionString, err := config.ConnectionString()
+						Expect(err).NotTo(HaveOccurred())
+						connUrl, err := url.Parse(connectionString)
+						Expect(err).NotTo(HaveOccurred())
+						connQuery := connUrl.Query()
+						Expect(connQuery.Get("sslmode")).To(Equal("verify-full"))
+					})
+					It("sets sslrootcert", func() {
+						connectionString, err := config.ConnectionString()
+						Expect(err).NotTo(HaveOccurred())
+						connUrl, err := url.Parse(connectionString)
+						Expect(err).NotTo(HaveOccurred())
+						connQuery := connUrl.Query()
+						Expect(connQuery.Get("sslrootcert")).To(Equal("/tmp/cert"))
+					})
+				})
+
 			})
 		})
 
