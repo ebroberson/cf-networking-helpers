@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -24,8 +25,7 @@ func (c Config) ConnectionString() (string, error) {
 	}
 	switch c.Type {
 	case "postgres":
-		ms := (time.Duration(c.Timeout) * time.Second).Nanoseconds() / 1000 / 1000
-		return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable&connect_timeout=%d", c.User, c.Password, c.Host, c.Port, c.DatabaseName, ms), nil
+		return buildPostgresConnectionString(c)
 	case "mysql":
 		mysqlConnectionStringBuilder := &MySQLConnectionStringBuilder{
 			MySQLAdapter: &MySQLAdapter{},
@@ -34,4 +34,21 @@ func (c Config) ConnectionString() (string, error) {
 	default:
 		return "", fmt.Errorf("database type '%s' is not supported", c.Type)
 	}
+}
+
+func buildPostgresConnectionString(c Config) (string, error) {
+	ms := (time.Duration(c.Timeout) * time.Second).Nanoseconds() / 1000 / 1000
+	params := url.Values{}
+
+	params.Add("sslmode", "disable")
+	params.Add("connect_timeout", fmt.Sprintf("%d", ms))
+
+	connURL := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(c.User, c.Password),
+		Host:     fmt.Sprintf("%s:%d", c.Host, c.Port),
+		Path:     c.DatabaseName,
+		RawQuery: params.Encode(),
+	}
+	return connURL.String(), nil
 }

@@ -67,7 +67,7 @@ var _ = Describe("Config", func() {
 			It("returns the connection string", func() {
 				connectionString, err := config.ConnectionString()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionString).To(Equal("postgres://some-user:some-password@some-host:1234/some-database?sslmode=disable&connect_timeout=5000"))
+				Expect(connectionString).To(Equal("postgres://some-user:some-password@some-host:1234/some-database?connect_timeout=5000&sslmode=disable"))
 			})
 		})
 
