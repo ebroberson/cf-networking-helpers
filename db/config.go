@@ -38,9 +38,22 @@ func (c Config) ConnectionString() (string, error) {
 
 func buildPostgresConnectionString(c Config) (string, error) {
 	ms := (time.Duration(c.Timeout) * time.Second).Nanoseconds() / 1000 / 1000
+	sslmode := "disable"
 	params := url.Values{}
 
-	params.Add("sslmode", "disable")
+	if c.RequireSSL {
+		if c.SkipHostnameValidation {
+			sslmode = "require"
+		} else {
+			if c.CACert == "" {
+				return "", fmt.Errorf("SSL is required but `CACert` is not provided")
+			}
+			sslmode = "verify-full"
+			params.Add("sslrootcert", c.CACert)
+		}
+	}
+
+	params.Add("sslmode", sslmode)
 	params.Add("connect_timeout", fmt.Sprintf("%d", ms))
 
 	connURL := url.URL{
