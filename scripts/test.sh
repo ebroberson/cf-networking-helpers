@@ -70,6 +70,6 @@ else
   extraArgs="-skipPackage=db ${extraArgs}"
 fi
 
-ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}
+GODEBUG=tls13=0 ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}
 
 rm -rf vendor/
