@@ -3,7 +3,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-networking-helpers
-    branch: master
+    branch: main
 
 jobs:
 - name: helpers-test-postgres
