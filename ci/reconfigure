@@ -1,11 +1,17 @@
 #!/bin/bash
 
-set -e -u
-export TARGET=ga
+set -euo pipefail
 
-fly -t $TARGET sync
-fly -t $TARGET status || fly -t $TARGET login -b
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-fly -t $TARGET \
-  set-pipeline -p cf-networking-helpers \
-  -c $HOME/workspace/cf-networking-helpers/ci/pipeline.yml
+export PIPELINE=${1:-cf-networking-helpers}
+export TARGET=net
+
+fly -t "${TARGET}" sync
+fly -t "${TARGET}" status || fly -t "${TARGET}" login -b
+
+fly \
+  --target $TARGET \
+  set-pipeline \
+  --pipeline "${PIPELINE}" \
+  --config "${DIR}/pipeline.yml"
