@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -exu
 set -o pipefail
 
 cd $(dirname $0)/..
@@ -46,8 +46,7 @@ function bootMysql {
 }
 
 echo "starting getting ginkgo"
-go get github.com/onsi/ginkgo
-go install github.com/onsi/ginkgo/ginkgo
+go get -u github.com/onsi/ginkgo
 
 if [ "${1:-""}" = "" ]; then
   extraArgs=""
