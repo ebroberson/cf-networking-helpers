@@ -8,16 +8,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    container:
-      image: ubuntu:focal
-
     services:
       postgres:
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
         ports:
-        - 5432:5432
+        - 5432/tcp
         # needed because the postgres container does not provide a healthcheck
         options: >-
           --health-cmd pg_isready
@@ -45,7 +42,8 @@ jobs:
       run: ./scripts/test.sh
       env:
         POSTGRES_PASSWORD: postgres
-        POSTGRES_HOST: postgres
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
 
   # promote:
   #   needs: test

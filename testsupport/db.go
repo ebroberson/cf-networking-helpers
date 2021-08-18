@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -87,12 +88,17 @@ func getPostgresDBConfig() db.Config {
 	if !isSet {
 		host = "127.0.0.1"
 	}
+	portStr, isSet := os.LookupEnv("POSTGRES_PORT")
+	if !isSet {
+		portStr = "5432"
+	}
+	port, _ := strconv.Atoi(portStr)
 	return db.Config{
 		Type:     "postgres",
 		User:     user,
 		Password: password,
 		Host:     host,
-		Port:     5432,
+		Port:     uint16(port),
 		Timeout:  DefaultDBTimeout,
 	}
 }
