@@ -6,6 +6,8 @@ code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 code.cloudfoundry.org/lager
 code.cloudfoundry.org/lager/lagerctx
 code.cloudfoundry.org/lager/lagertest
+# github.com/apoydence/eachers v0.0.0-20181020210610-23942921fe77
+## explicit
 # github.com/cloudfoundry/dropsonde v1.0.0
 ## explicit
 github.com/cloudfoundry/dropsonde/emitter/fake
@@ -26,8 +28,6 @@ github.com/go-task/slim-sprig
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
-# github.com/hpcloud/tail v1.0.1-0.20180514194441-a1dbeea552b7
-## explicit
 # github.com/jmoiron/sqlx v1.2.0
 ## explicit
 github.com/jmoiron/sqlx
@@ -145,8 +145,6 @@ golang.org/x/xerrors/internal
 # google.golang.org/appengine v1.3.0
 ## explicit
 google.golang.org/appengine/cloudsql
-# gopkg.in/fsnotify/fsnotify.v1 v1.4.7
-## explicit
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.3.0
