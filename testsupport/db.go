@@ -75,11 +75,23 @@ func getDbConnection(conf db.Config) dbConnection {
 const DefaultDBTimeout = 5
 
 func getPostgresDBConfig() db.Config {
+	user, isSet := os.LookupEnv("POSTGRES_USER")
+	if !isSet {
+		user = "postgres"
+	}
+	password, isSet := os.LookupEnv("POSTGRES_PASSWORD")
+	if !isSet {
+		password = "postgres"
+	}
+	host, isSet := os.LookupEnv("POSTGRES_HOST")
+	if !isSet {
+		host = "127.0.0.1"
+	}
 	return db.Config{
 		Type:     "postgres",
-		User:     "postgres",
-		Password: "",
-		Host:     "127.0.0.1",
+		User:     user,
+		Password: password,
+		Host:     host,
 		Port:     5432,
 		Timeout:  DefaultDBTimeout,
 	}

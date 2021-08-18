@@ -54,10 +54,6 @@ else
   extraArgs="${@}"
 fi
 
-echo "starting getting dependencies"
-go get -u github.com/golang/dep/cmd/dep
-dep ensure
-
 if [ ${DB:-"none"} = "mysql" ] || [ ${DB:-"none"} = "mysql-5.6" ]; then
   bootMysql
   ginkgo -r --race -randomizeAllSpecs ${extraArgs} db/timeouts
@@ -69,6 +65,4 @@ else
   extraArgs="-skipPackage=db ${extraArgs}"
 fi
 
-GODEBUG=tls13=0 ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}
-
-rm -rf vendor/
+ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -skipPackage=timeouts ${extraArgs}
