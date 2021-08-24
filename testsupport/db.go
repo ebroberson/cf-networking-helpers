@@ -121,6 +121,9 @@ func getMySQLDBConfig() db.Config {
 		portStr = "3306"
 	}
 	port, _ := strconv.Atoi(portStr)
+
+	fmt.Printf("User %s , Password %s , host %s , port %d\n", user, password, host, port)
+
 	return db.Config{
 		Type:     "mysql",
 		User:     user,
