@@ -98,13 +98,13 @@ var _ = Describe("Timeout", func() {
 	blockPort := func(port uint16) {
 		portString := strconv.Itoa(int(port))
 		By("blocking access to port " + portString)
-		mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		mustSucceed("sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
 	}
 
 	unblockPort := func(port uint16) {
 		portString := strconv.Itoa(int(port))
 		By("unblocking access to port " + portString)
-		mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		mustSucceed("sudo", "iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
 	}
 
 	Describe("mysql", func() {
