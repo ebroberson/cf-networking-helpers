@@ -2,6 +2,8 @@ module code.cloudfoundry.org/cf-networking-helpers
 
 go 1.16
 
+replace code.cloudfoundry.org/lager => code.cloudfoundry.org/lager v1.1.1-0.20210513163233-569157d2803b
+
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20181031172904-fa22f11221f9
 	code.cloudfoundry.org/lager v2.0.0+incompatible
@@ -15,7 +17,7 @@ require (
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/gomega v1.12.0
 	github.com/pkg/errors v0.8.0
 	github.com/square/certstrap v1.1.1
 	github.com/tedsuo/ifrit v0.0.0-20180802180643-bea94bb476cc
