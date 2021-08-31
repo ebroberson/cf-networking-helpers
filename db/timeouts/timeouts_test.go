@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -98,13 +99,21 @@ var _ = Describe("Timeout", func() {
 	blockPort := func(port uint16) {
 		portString := strconv.Itoa(int(port))
 		By("blocking access to port " + portString)
-		mustSucceed("sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		if isRoot() {
+			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		} else {
+			mustSucceed("sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		}
 	}
 
 	unblockPort := func(port uint16) {
 		portString := strconv.Itoa(int(port))
 		By("unblocking access to port " + portString)
-		mustSucceed("sudo", "iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		if isRoot() {
+			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		} else {
+			mustSucceed("sudo", "iptables", "-D", "INPUT", "-p", "tcp", "--dport", portString, "-j", "DROP")
+		}
 	}
 
 	Describe("mysql", func() {
@@ -233,6 +242,14 @@ var _ = Describe("Timeout", func() {
 		})
 	})
 })
+
+func isRoot() bool {
+	cmd := exec.Command("whoami")
+	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(sess, "5s").Should(gexec.Exit(0))
+	return strings.Trim(string(sess.Out.Contents()), "\n") == "root"
+}
 
 func mustSucceed(binary string, args ...string) string {
 	cmd := exec.Command(binary, args...)
