@@ -82,3 +82,21 @@ jobs:
         DB_PASSWORD: mysql
         DB_HOST: 127.0.0.1
         DB_PORT: ${{ job.services.mysql8.ports[3306] }}
+
+  promote:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # fetch-depth: Number of commits to fetch. 0 indicates all history for all branches and tags.
+        fetch-depth: 0
+    - name: Promote to main
+      run: |
+        git fetch --all
+
+        git checkout main
+        git pull --rebase
+
+        git rebase develop
+        git push
